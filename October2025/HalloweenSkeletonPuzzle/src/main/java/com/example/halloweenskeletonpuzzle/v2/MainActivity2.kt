@@ -155,8 +155,7 @@ fun Modifier.detectPositionAndSize(
 @Composable
 private fun ImagePartWithDetection(
     item: BoneItem,
-    state: BonesState2,
-    onStateUpdate: (BonesState2) -> Unit,
+    onStateUpdate: (BoneItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var offset by remember { mutableStateOf(item.offset) }
@@ -175,19 +174,13 @@ private fun ImagePartWithDetection(
                 onPosition = {
                     offset = it
                     onStateUpdate(
-                        state.updateBone(
-                            item,
-                            item.copy(offset = offset, size = size)
-                        )
+                        item.copy(offset = offset, size = size)
                     )
                 },
                 onSize = {
                     size = it.toSize()
                     onStateUpdate(
-                        state.updateBone(
-                            item,
-                            item.copy(offset = offset, size = size)
-                        )
+                        item.copy(offset = offset, size = size)
                     )
                 }
             )
@@ -197,10 +190,16 @@ private fun ImagePartWithDetection(
 data class BoneItem(
     val img: Int,
     val offset: Offset = Offset(0f, 0f),
-    var size: Size = Size(0f, 0f),
-    var alpha: Float = 1f,
-    var borderSize: Dp = 1.dp
+    val size: Size = Size(0f, 0f),
+    val alpha: Float = 1f,
+    val borderSize: Dp = 1.dp
 ) {
+
+
+    override fun toString(): String {
+        return "BoneItem: $img $offset $size"
+    }
+
     fun overlaps(second: BoneItem): Boolean =
         Rect(this.offset, this.size).overlaps(
             Rect(
@@ -223,31 +222,50 @@ data class BonesState2(
     val listBody = listOf(head, armLeft, armRight, ribCage, pelvis, legLeft, legRight)
 
     fun withTopStyle(): BonesState2 {
-        listBody.forEach {
-            it.alpha = 0.6f
-        }
-        return this
+        return copy(
+            head = head.copy(alpha = 0.6f),
+            armLeft = armLeft.copy(alpha = 0.6f),
+            armRight = armRight.copy(alpha = 0.6f),
+            ribCage = ribCage.copy(alpha = 0.6f),
+            pelvis = pelvis.copy(alpha = 0.6f),
+            legLeft = legLeft.copy(alpha = 0.6f),
+            legRight = legRight.copy(alpha = 0.6f),
+        )
+
     }
 
     fun withBottomStyle(): BonesState2 {
-        listBody.forEach {
-            it.alpha = 0.9f
-
-        }
-        return this
+        return copy(
+            head = head.copy(alpha = 0.9f),
+            armLeft = armLeft.copy(alpha = 0.9f),
+            armRight = armRight.copy(alpha = 0.9f),
+            ribCage = ribCage.copy(alpha = 0.9f),
+            pelvis = pelvis.copy(alpha = 0.9f),
+            legLeft = legLeft.copy(alpha = 0.9f),
+            legRight = legRight.copy(alpha = 0.9f),
+        )
     }
 
-    fun updateBone(originalItem: BoneItem, updatedItem: BoneItem): BonesState2 {
-        return when (originalItem) {
-            head -> copy(head = updatedItem)
-            armLeft -> copy(armLeft = updatedItem)
-            armRight -> copy(armRight = updatedItem)
-            ribCage -> copy(ribCage = updatedItem)
-            pelvis -> copy(pelvis = updatedItem)
-            legLeft -> copy(legLeft = updatedItem)
-            legRight -> copy(legRight = updatedItem)
-            else -> this
+    fun update(updatedItem: BoneItem): BonesState2 {
+        println("updatedItem ?")
+        return when (updatedItem.img) {
+            R.drawable.head -> {
+                println("updatedItem head"); copy(head = updatedItem)
+            }
+
+            R.drawable.arm_left -> copy(armLeft = updatedItem)
+            R.drawable.arm_right -> copy(armRight = updatedItem)
+            R.drawable.rib_cage -> copy(ribCage = updatedItem)
+            R.drawable.pelvis -> copy(pelvis = updatedItem)
+            R.drawable.leg_left -> copy(legLeft = updatedItem)
+            R.drawable.leg_right -> copy(legRight = updatedItem)
+            else -> {
+                println("updatedItem this");
+                assert(false);
+                this
+            }
         }
+
     }
 }
 
@@ -288,46 +306,48 @@ fun Skeleton2() {
             color = Color.White
         )
         Text(
-            "Top: " +
+            "Bottom: " +
                     "${bottomBones.head.size} \n" +
                     "${bottomBones.head.offset} \n", color = Color.White
         )
 
-        //1
         ImagePartWithDetection(
             topBones.head,
-            topBones,
-            onStateUpdate = {
-                topBones = it
-            }, modifier = Modifier
+            onStateUpdate = { topBones = topBones.copy(it) }
         )
 
         Row {
-            ImagePart(
-                topBones.armLeft, modifier = Modifier
+            ImagePartWithDetection(
+                topBones.armLeft,
+                onStateUpdate = { }
             )
-
             Column {
-                ImagePart(
-                    topBones.ribCage, modifier = Modifier
+                ImagePartWithDetection(
+                    topBones.ribCage,
+                    onStateUpdate = { }
                 )
-                ImagePart(
-                    topBones.pelvis, modifier = Modifier
+                ImagePartWithDetection(
+                    topBones.pelvis,
+                    onStateUpdate = { }
                 )
             }
 
-            ImagePart(
-                topBones.armRight, modifier = Modifier
+            ImagePartWithDetection(
+                topBones.armRight,
+                onStateUpdate = { }
             )
 
         }
         Row {
-            ImagePart(
-                topBones.legLeft, modifier = Modifier
+            ImagePartWithDetection(
+                topBones.legLeft,
+                onStateUpdate = { }
             )
-            ImagePart(
-                topBones.legRight, modifier = Modifier
+            ImagePartWithDetection(
+                topBones.legRight,
+                onStateUpdate = { }
             )
+
         }
         Spacer(modifier = Modifier.height(25.dp))
 
@@ -351,8 +371,9 @@ fun Skeleton2() {
                 //2
                 ImagePartWithDetection(
                     item = bottomBones.head,
-                    bottomBones,
-                    onStateUpdate = { bottomBones = it },
+                    onStateUpdate = {
+                        bottomBones = bottomBones.update(it)
+                    },
                     modifier = Modifier
                         .simpleDrag()
 
