@@ -177,6 +177,7 @@ private fun ImageBoneItem(
     var localAnimation by remember { mutableStateOf(Animation.INIT) }
 
     val animateHead = animationHeadOnce(localAnimation == Animation.ANIMATE_HEAD)
+    val animateHeadLong = animationLong(localAnimation == Animation.ANIMATE_HEAD_LONG)
 
     var borderColor by remember { mutableStateOf(Color.White) }
     var borderSize by remember { mutableStateOf(1.dp) }
@@ -226,7 +227,7 @@ private fun ImageBoneItem(
             delay(100)
             localAnimation = Animation.INIT
         }
-        if (item.animation == Animation.ANIMATE_HEAD && !item.isFind) {
+        if (item.animation == Animation.ANIMATE_HEAD) {
             localAnimation = Animation.ANIMATE_HEAD
             delay(1500)
         }
@@ -236,6 +237,14 @@ private fun ImageBoneItem(
             alpha = 0.8f
             localAnimation = Animation.MOVE_HOME
             delay(1500)
+        }
+        if (item.animation == Animation.ANIMATE_HEAD_LONG) {
+            localAnimation= Animation.ANIMATE_HEAD_LONG
+
+        }
+        if (item.animation == Animation.NONE) {
+            localAnimation= Animation.NONE
+
         }
     }
 
@@ -260,6 +269,7 @@ private fun ImageBoneItem(
                         }) else Modifier
             )
             .rotate(animateHead.value)
+            .rotate(animateHeadLong.value)
             .alpha(alpha)
             .border(
                 borderSize,
@@ -287,7 +297,7 @@ private fun ImageBoneItem(
 }
 
 enum class Animation {
-    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME, WHITE_HOME
+    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME, WHITE_HOME,ANIMATE_HEAD_LONG
 }
 
 enum class BoneType {
@@ -307,8 +317,8 @@ data class BoneItem(
 
     fun isInPlace(second: BoneItem): Boolean {
         println("${this.offset} + ${second.offset}")
-        return abs(this.offset.x - second.offset.x) < 30 &&
-                abs(this.offset.y - second.offset.y) < 30
+        return abs(this.offset.x - second.offset.x) < 50 &&
+                abs(this.offset.y - second.offset.y) < 50
     }
 
 
@@ -431,9 +441,22 @@ fun Skeleton2() {
 
             findAll = topBones.listBody.all { it.isFind }
             if (findAll) {
+
                 topBones = topBones.updateItem(
                     topBones.head.copy(
-                        animation = Animation.ANIMATE_HEAD
+                        animation = Animation.ANIMATE_HEAD_LONG
+                    )
+                )
+
+                topBones = topBones.updateItem(
+                    topBones.armRight.copy(
+                        animation = Animation.ANIMATE_HEAD_LONG
+                    )
+                )
+
+                topBones = topBones.updateItem(
+                    topBones.armLeft.copy(
+                        animation = Animation.ANIMATE_HEAD_LONG
                     )
                 )
             }
@@ -580,14 +603,37 @@ fun Skeleton2() {
 
         Spacer(modifier = Modifier.size(42.dp))
         if (findAll) {
+//        Button(onClick = {
+//
+//            topBones = topBones.updateItem(
+//                topBones.head.copy(
+//                    animation = Animation.ANIMATE_HEAD_LONG
+//                )
+//            )
+//
+//            topBones = topBones.updateItem(
+//                topBones.armRight.copy(
+//                    animation = Animation.ANIMATE_HEAD_LONG
+//                )
+//            )
+//
+//            topBones = topBones.updateItem(
+//                topBones.armLeft.copy(
+//                    animation = Animation.ANIMATE_HEAD_LONG
+//                )
+//            )
+//        }) {
+//         Text("Head", color = Color.White)
+//        }
             Button(
                 onClick = {
-
+                    findAll = false
                     topBones.listBody.forEach {
                         topBones = topBones.updateItem(
                             it.copy(
                                 isFind = false,
                                 isHighlight = false,
+                                animation = Animation.NONE
                             )
                         )
                     }
@@ -637,5 +683,24 @@ fun animationHeadOnce(animate: Boolean): Animatable<Float, AnimationVector1D> {
     }
     return currentRotation
 }
+
+@Composable
+fun animationLong(animate: Boolean): Animatable<Float, AnimationVector1D> {
+    val currentRotation = remember { Animatable(0f) }
+
+    LaunchedEffect(animate) {
+        while (animate) {
+            currentRotation.stop()
+            listOf(15f, -15f).forEach { target ->
+                currentRotation.animateTo(target, tween(250))
+            }
+        }
+
+        currentRotation.animateTo(0f, tween(250))
+
+    }
+    return currentRotation
+}
+
 
 
