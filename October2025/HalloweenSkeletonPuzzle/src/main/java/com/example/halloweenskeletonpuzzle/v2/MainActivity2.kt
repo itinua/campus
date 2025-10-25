@@ -6,7 +6,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,6 +64,7 @@ import com.example.halloweenskeletonpuzzle.RoadRageFontFamily
 import com.example.halloweenskeletonpuzzle.animateHead
 import com.example.halloweenskeletonpuzzle.toIntOffset
 import com.example.halloweenskeletonpuzzle.ui.theme.CampusTheme
+import kotlinx.coroutines.delay
 
 
 val padding = 10.dp
@@ -100,33 +104,34 @@ class MainActivity2 : ComponentActivity() {
 }
 
 @Composable
-fun Modifier.simpleDrag(onMove: (Boolean) -> Unit = {}): Modifier {
+fun Modifier.simpleDrag(
+    animateGoHome: Boolean,
+    onClickStart: () -> Unit = {},
+    onClickFinish: () -> Unit = {}
+
+): Modifier {
     var offset by remember { mutableStateOf(Offset.Zero) }
-
-    var isMove by remember { mutableStateOf(false) }
-
-    val animateHaed = animateHead(isMove)
 
     val animatedOffset by animateOffsetAsState(
         targetValue = offset,
         label = "itemPositionAnimation"
     )
 
+    if (animateGoHome) {
+        offset = Offset.Zero
+    }
+
 
     return this
         .offset { animatedOffset.toIntOffset() }
-        .rotate(animateHaed.value)
         .pointerInput(Unit) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     if (event.type == PointerEventType.Press) {
-                        isMove = true
-                        onMove(true)
+                        onClickStart()
                     } else if (event.type == PointerEventType.Release) {
-                        isMove = false
-                        onMove(false)
-                        offset = Offset.Zero
+                        onClickFinish()
                     }
                 }
             }
@@ -135,7 +140,6 @@ fun Modifier.simpleDrag(onMove: (Boolean) -> Unit = {}): Modifier {
             detectDragGestures { change, dragAmount ->
                 change.consume()
                 offset = offset + dragAmount
-                isMove = false
             }
 
         }
@@ -155,7 +159,7 @@ fun Modifier.detectPositionAndSize(
 
 
 @Composable
-private fun ImagePartWithDetection(
+private fun ImageBoneItem(
     item: BoneItem,
     onStateUpdate: (BoneItem) -> Unit,
     modifier: Modifier = Modifier,
@@ -163,18 +167,61 @@ private fun ImagePartWithDetection(
 ) {
     var offset by remember { mutableStateOf(item.offset) }
     var size by remember { mutableStateOf(item.size) }
-    ImagePart(
-        item,
+
+
+    var localAnimation by remember { mutableStateOf(Animation.INIT) }
+
+    val animateHead = animationHeadOnce(localAnimation == Animation.ANIMATE_HEAD)
+
+
+    LaunchedEffect(item.animation) {
+        if (item.animation == Animation.RED_HOME) {
+            onStateUpdate(
+                item.copy(borderColor = Color.Red)
+            )
+            localAnimation = Animation.NONE
+            delay(100)
+            localAnimation = Animation.ANIMATE_HEAD
+            delay(1500)
+            localAnimation = Animation.MOVE_HOME
+            onStateUpdate(
+                item.copy(borderColor = Color.White)
+            )
+            delay(1500)
+            localAnimation = Animation.INIT
+
+        }
+        if (item.animation == Animation.ANIMATE_HEAD) {
+            localAnimation = Animation.ANIMATE_HEAD
+            delay(1500)
+        }
+    }
+
+
+    Image(
+        painter = painterResource(item.img),
+        contentDescription = "",
+        colorFilter = ColorFilter.tint(Color.White),
         modifier = modifier
-            .then(if (withMovement) Modifier.simpleDrag({
-                onStateUpdate(
-                    item.copy(isMoving = it)
-                )
-            }) else Modifier)
+            .then(
+                if (withMovement)
+                    Modifier.simpleDrag(
+                        localAnimation == Animation.MOVE_HOME,
+                        onClickStart = {
+                            onStateUpdate(
+                                item.copy(animation = Animation.ANIMATE_HEAD, isMoving = true)
+                            )
+                        }, onClickFinish = {
+                            onStateUpdate(
+                                item.copy(animation = Animation.RED_HOME, isMoving = false)
+                            )
+                        }) else Modifier
+            )
+            .rotate(animateHead.value)
             .alpha(item.alpha)
             .border(
                 item.borderSize,
-                Color.White,
+                item.borderColor,
                 RoundedCornerShape(1.dp)
             )
             .padding(10.dp)
@@ -194,8 +241,11 @@ private fun ImagePartWithDetection(
             )
 
 
-
     )
+}
+
+enum class Animation {
+    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME
 }
 
 data class BoneItem(
@@ -204,7 +254,9 @@ data class BoneItem(
     val size: Size = Size(0f, 0f),
     val alpha: Float = 1f,
     val borderSize: Dp = 1.dp,
-    val isMoving: Boolean = false
+    val isMoving: Boolean = false,
+    val borderColor: Color = Color.White,
+    val animation: Animation = Animation.INIT
 ) {
 
 
@@ -290,97 +342,82 @@ fun Skeleton2() {
         val onBottomUpdate: (BoneItem) -> Unit = { updatedItem ->
             bottomBones = bottomBones.updateItem(updatedItem)
         }
-        val onMove: (BoneItem, Boolean) -> Unit = { updatedItem, value ->
-            bottomBones = bottomBones.updateItem(updatedItem.copy(isMoving = value))
-        }
+
 
         LaunchedEffect(key1 = topBones, key2 = bottomBones) {
-            //val isOverlap = topBones.head.overlaps(bottomBones.head)
-
-            val active = bottomBones.head
-
             var cache = topBones
+
+            val allNotMOve = bottomBones.listBody.all { !it.isMoving }
+
             bottomBones.listBody.forEach { active ->
-                if (active.isMoving) {
+                if (active.isMoving || allNotMOve) {
                     topBones.listBody.forEach { top ->
                         val isOverlap = active.overlaps(top)
 
                         val topUpdated = if (isOverlap) {
-                            top.copy(borderSize = 3.dp)
+                            top.copy(borderSize = 3.dp, alpha = 0.8f)
                         } else {
-                            top.copy(borderSize = 1.dp)
+                            top.copy(borderSize = 1.dp, alpha = 0.6f)
                         }
 
                         cache = cache.updateItem(topUpdated)
 
                     }
+
+                    // cache = cache.updateItem(active.copy(stateGoHome= true))
+
                 }
             }
-
             topBones = cache
 
-//
-//            if (isOverlap) {
-//                topBones = topBones.copy(
-//                    head = topBones.head.copy(
-//                        alpha = 0.8f,
-//                        borderSize = 2.dp
-//                    )
-//                )
-//            } else {
-//                topBones = topBones.copy(
-//                    head = topBones.head.copy(
-//                        alpha = 0.6f,
-//                        borderSize = 1.dp
-//                    )
-//                )
-//            }
         }
 
         Spacer(modifier = Modifier.height(60.dp))
 
-        Text("${topBones.head.borderSize}", color = Color.White)
-        Text(
-            "Top: " +
-                    "${topBones.head.size} \n" +
-                    "${topBones.head.offset} \n",
-            color = Color.White
-        )
-        Text(
-            "Bottom: " +
-                    "${bottomBones.head.size} \n" +
-                    "${bottomBones.head.offset} \n", color = Color.White
-        )
+//        //if (false) {
+//        Text("${topBones.head.borderSize}", color = Color.White)
+//        Text(
+//            "Top: " +
+//                    "${topBones.head.size} \n" +
+//                    "${topBones.head.offset} \n",
+//            color = Color.White
+//        )
+//        Text(
+//            "Bottom: " +
+//                    "${bottomBones.head.size} \n" +
+//                    "${bottomBones.head.offset} \n", color = Color.White
+//        )
+//        //   }
 
-        ImagePartWithDetection(topBones.head, onTopUpdate)
+        ImageBoneItem(topBones.head, onTopUpdate)
 
         Row {
-            ImagePartWithDetection(
+            ImageBoneItem(
                 topBones.armLeft, onTopUpdate
             )
             Column {
-                ImagePartWithDetection(
+                ImageBoneItem(
                     topBones.ribCage,
                     onTopUpdate
                 )
-                ImagePartWithDetection(
+                ImageBoneItem(
                     topBones.pelvis,
                     onTopUpdate
                 )
             }
 
-            ImagePartWithDetection(
+            ImageBoneItem(
                 topBones.armRight,
                 onTopUpdate
             )
 
         }
         Row {
-            ImagePartWithDetection(
+            ImageBoneItem(
                 topBones.legLeft,
                 onTopUpdate
             )
-            ImagePartWithDetection(
+            ImageBoneItem(
                 topBones.legRight,
                 onTopUpdate
             )
@@ -395,15 +432,15 @@ fun Skeleton2() {
         Row {
             Column {
                 Row {
-                    ImagePartWithDetection(
+                    ImageBoneItem(
                         item = bottomBones.legLeft,
                         onStateUpdate = onBottomUpdate,
-                       withMovement = true
+                        withMovement = true
                     )
 
                     Spacer(modifier = Modifier.size(padding))
-                    ImagePartWithDetection(
-                        item = bottomBones.legRight,
+                    ImageBoneItem(
+                        item = bottomBones.armRight,
                         onStateUpdate = onBottomUpdate,
                         withMovement = true
                     )
@@ -412,7 +449,7 @@ fun Skeleton2() {
 
 
 
-                ImagePartWithDetection(
+                ImageBoneItem(
                     item = bottomBones.head,
                     onStateUpdate = onBottomUpdate,
                     withMovement = true
@@ -422,13 +459,13 @@ fun Skeleton2() {
             }
             Spacer(modifier = Modifier.size(padding))
             Column {
-                ImagePartWithDetection(
+                ImageBoneItem(
                     item = bottomBones.ribCage,
                     onStateUpdate = onBottomUpdate,
                     withMovement = true
                 )
                 Spacer(modifier = Modifier.size(padding))
-                ImagePartWithDetection(
+                ImageBoneItem(
                     item = bottomBones.armLeft,
                     onStateUpdate = onBottomUpdate,
                     withMovement = true
@@ -437,13 +474,13 @@ fun Skeleton2() {
 
             Spacer(modifier = Modifier.size(padding))
             Column {
-                ImagePartWithDetection(
+                ImageBoneItem(
                     item = bottomBones.legRight,
                     onStateUpdate = onBottomUpdate,
                     withMovement = true
                 )
                 Spacer(modifier = Modifier.size(padding))
-                ImagePartWithDetection(
+                ImageBoneItem(
                     item = bottomBones.pelvis,
                     onStateUpdate = onBottomUpdate,
                     withMovement = true
@@ -478,16 +515,22 @@ fun Skeleton2() {
 
 }
 
+
 @Composable
-fun ImagePart(item: BoneItem, modifier: Modifier = Modifier) {
-    Column {
-        Image(
-            painter = painterResource(item.img),
-            contentDescription = "head",
-            colorFilter = ColorFilter.tint(Color.White),
-            //alpha = if (item.isOverlap()) 1f else 0.5f,
-            modifier = modifier
-        )
+fun animationHeadOnce(animate: Boolean): Animatable<Float, AnimationVector1D> {
+    val currentRotation = remember { Animatable(0f) }
+
+    LaunchedEffect(animate) {
+        if (animate) {
+            currentRotation.stop()
+            listOf(15f, -15f, 15f, 0f).forEach { target ->
+                currentRotation.animateTo(target, tween(250))
+            }
+        } else {
+            currentRotation.animateTo(0f, tween(250))
+        }
     }
+    return currentRotation
 }
+
 
