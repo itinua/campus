@@ -3,12 +3,14 @@
 package com.example.halloweenskeletonpuzzle.v2
 
 import android.R.attr.animation
+import android.R.attr.label
 import android.R.attr.top
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
@@ -115,8 +117,10 @@ fun Modifier.simpleDrag(
 ): Modifier {
     var offset by remember { mutableStateOf(Offset.Zero) }
 
+    var isPress by remember { mutableStateOf(false) }
     val animatedOffset by animateOffsetAsState(
         targetValue = offset,
+        animationSpec = tween(if (isPress) 10 else 1000),
         label = "itemPositionAnimation"
     )
 
@@ -127,15 +131,19 @@ fun Modifier.simpleDrag(
 
     return this
         .offset { animatedOffset.toIntOffset() }
+        //.offset { animatedOffset.toIntOffset() }
+        //.offset { offset.toIntOffset() }
         .pointerInput(Unit) {
             awaitPointerEventScope {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     if (event.type == PointerEventType.Press) {
                         onClickStart()
+                        isPress = true
                         println("sad-Press")
                     } else if (event.type == PointerEventType.Release) {
                         onClickFinish()
+                        isPress = false
                         println("sad-Release")
                     }
                 }
@@ -239,11 +247,11 @@ private fun ImageBoneItem(
             delay(1500)
         }
         if (item.animation == Animation.ANIMATE_HEAD_LONG) {
-            localAnimation= Animation.ANIMATE_HEAD_LONG
+            localAnimation = Animation.ANIMATE_HEAD_LONG
 
         }
         if (item.animation == Animation.NONE) {
-            localAnimation= Animation.NONE
+            localAnimation = Animation.NONE
 
         }
     }
@@ -297,7 +305,7 @@ private fun ImageBoneItem(
 }
 
 enum class Animation {
-    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME, WHITE_HOME,ANIMATE_HEAD_LONG
+    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME, WHITE_HOME, ANIMATE_HEAD_LONG
 }
 
 enum class BoneType {
@@ -318,7 +326,7 @@ data class BoneItem(
     fun isInPlace(second: BoneItem): Boolean {
         println("${this.offset} + ${second.offset}")
         return this.img == second.img &&
-        abs(this.offset.x - second.offset.x) < 50 &&
+                abs(this.offset.x - second.offset.x) < 50 &&
                 abs(this.offset.y - second.offset.y) < 50
     }
 
