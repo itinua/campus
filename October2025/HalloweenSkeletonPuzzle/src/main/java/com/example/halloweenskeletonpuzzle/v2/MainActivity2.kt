@@ -317,7 +317,8 @@ data class BoneItem(
 
     fun isInPlace(second: BoneItem): Boolean {
         println("${this.offset} + ${second.offset}")
-        return abs(this.offset.x - second.offset.x) < 50 &&
+        return this.img == second.img &&
+        abs(this.offset.x - second.offset.x) < 50 &&
                 abs(this.offset.y - second.offset.y) < 50
     }
 
