@@ -1,60 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
-    android:drawable="@drawable/pumpkin">
+    android:drawable="@drawable/pum">
 
-    <!-- Animations on the pumpkin_group -->
     <target android:name="pumpkin_group">
-        <!-- Scale animation: from 50% to 100% over 1.8s -->
+
         <aapt:attr name="android:animation">
-            <set android:ordering="together">
-                <objectAnimator
-                    android:duration="1800"
-                    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-                    android:propertyName="scaleX"
-                    android:valueFrom="0.5"
-                    android:valueTo="1.0"/>
-                <objectAnimator
-                    android:duration="1800"
-                    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-                    android:propertyName="scaleY"
-                    android:valueFrom="0.5"
-                    android:valueTo="1.0"/>
-                    
-                <!-- Rotation: 2 full counterclockwise rotations (720 degrees) -->
-                <objectAnimator
-                    android:duration="1800"
-                    android:interpolator="@android:anim/linear_interpolator"
-                    android:propertyName="rotation"
-                    android:valueFrom="0"
-                    android:valueTo="-720"/>
-                    
-                <!-- Slight tilt left at the end (starts at 1.6s) -->
-                <objectAnimator
-                    android:duration="200"
-                    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-                    android:propertyName="rotationX"
-                    android:startOffset="1600"
-                    android:valueFrom="0"
-                    android:valueTo="-5"/>
-                    
-                <!-- Tilt right and back (starts at 1.8s) -->
-                <objectAnimator
-                    android:duration="200"
-                    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-                    android:propertyName="rotationX"
-                    android:startOffset="1800"
-                    android:valueFrom="-5"
-                    android:valueTo="10"/>
-                <objectAnimator
-                    android:duration="200"
-                    android:interpolator="@android:anim/accelerate_decelerate_interpolator"
-                    android:propertyName="rotationX"
-                    android:startOffset="2000"
-                    android:valueFrom="10"
-                    android:valueTo="0"/>
-                    
-                <!-- Pause for 0.8s after 2.2s (total duration is 3s) -->
+            <set android:ordering="sequentially">
+                <set android:ordering="together">
+                    <objectAnimator
+                        android:duration="1800"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="scaleX"
+                        android:valueFrom="0"
+                        android:valueTo="0.5"
+                        android:valueType="floatType" />
+
+                    <objectAnimator
+                        android:duration="1800"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="scaleY"
+                        android:valueFrom="0"
+                        android:valueTo="0.5"
+                        android:valueType="floatType" />
+
+                    <objectAnimator
+                        android:duration="1800"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="rotation"
+                        android:valueFrom="0"
+                        android:valueTo="720" />
+                </set>
+                <set android:ordering="sequentially">
+                    <objectAnimator
+                        android:duration="500"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="rotation"
+                        android:valueFrom="0"
+                        android:valueTo="45" />
+                    <objectAnimator
+                        android:duration="500"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="rotation"
+                        android:valueFrom="45"
+                        android:valueTo="-45" />
+                    <objectAnimator
+                        android:duration="500"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="rotation"
+                        android:valueFrom="-45"
+                        android:valueTo="45" />
+                    <objectAnimator
+                        android:duration="500"
+                        android:interpolator="@android:anim/accelerate_decelerate_interpolator"
+                        android:propertyName="rotation"
+                        android:valueFrom="45"
+                        android:valueTo="0" />
+                </set>
             </set>
         </aapt:attr>
     </target>

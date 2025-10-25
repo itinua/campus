@@ -8,6 +8,7 @@ import android.view.animation.AccelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.demo.ui.theme.Project2Theme
 
 class MainActivity : ComponentActivity() {
+
+    private val viewModel by viewModels<MainViewModel>()
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -36,7 +41,7 @@ class MainActivity : ComponentActivity() {
             AnimatorSet().apply {
                 //playTogether(scaleX, scaleY)
 
-                playTogether(scaleX, scaleY, rotation) //bug with rotation in Android
+                playTogether(scaleX, scaleY,rotation) //bug with rotation in Android
                 interpolator = AccelerateInterpolator()
                 duration = 800L
 
@@ -47,6 +52,7 @@ class MainActivity : ComponentActivity() {
             }
 
         }
+        installSplashScreen().setKeepOnScreenCondition {  !viewModel.isReady }
 
         enableEdgeToEdge()
         setContent {
