@@ -97,6 +97,19 @@ data class BonesState(
     val legRight: Item = Item(R.drawable.leg_right),
 ) {
     val listBody = listOf(head, armLeft, armRight, ribCage, pelvis, legLeft, legRight)
+
+    fun updateBone(originalItem: Item, updatedItem: Item): BonesState {
+        return when (originalItem) {
+            head -> copy(head = updatedItem)
+            armLeft -> copy(armLeft = updatedItem)
+            armRight -> copy(armRight = updatedItem)
+            ribCage -> copy(ribCage = updatedItem)
+            pelvis -> copy(pelvis = updatedItem)
+            legLeft -> copy(legLeft = updatedItem)
+            legRight -> copy(legRight = updatedItem)
+            else -> this
+        }
+    }
 }
 
 class MainActivity : ComponentActivity() {
