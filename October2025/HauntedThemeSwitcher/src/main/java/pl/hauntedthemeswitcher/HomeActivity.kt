@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -15,6 +16,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -22,10 +24,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -77,14 +82,30 @@ class HomeActivity : ComponentActivity() {
                             .padding()
                             .background(animatedColor)
                     ) {
+                        var state = rememberScrollState()
+                        LaunchedEffect(Unit) {
+                            state.scrollTo(2000)
+                        }
+
+
                         Image(
                             painter = painterResource(R.drawable.graveyard),
                             modifier = Modifier
                                 .fillMaxSize()
+                                .horizontalScroll(state,true)
                                 .offset { offset },
+
                             contentScale = ContentScale.FillHeight,
                             contentDescription = ""
                         )
+                        LaunchedEffect(isDay) {
+                            while (true) {
+                                state.animateScrollTo(if(isDay) 2000 else 0, animationSpec = tween (durationMillis = 1000))
+
+                            }
+                        }
+
+
 
                         val configuration = LocalConfiguration.current
 
