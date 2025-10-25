@@ -95,6 +95,7 @@ class HomeActivity : ComponentActivity() {
                         val cloud2 by animateFloatAsState(if (isDay) 20f else 400f, animationSpec = tween(1000))
                         val cloud3 by animateFloatAsState(if (isDay) 300f else -300f, animationSpec = tween(1000))
                         val ghost by animateFloatAsState(if (isDay) 0.0f else 1.0f, animationSpec = tween(1000))
+                        val moon by animateFloatAsState(if (isDay) 0.0f else 1.0f, animationSpec = tween(2000))
 
                         val infiniteTransition = rememberInfiniteTransition(label = "infinite transition")
                         val animatedGhost by infiniteTransition.animateFloat(
@@ -119,6 +120,9 @@ class HomeActivity : ComponentActivity() {
 
                         Image(painterResource(R.drawable.sun), contentDescription = "",
                             modifier = Modifier.offset(x=sunOffset.dp,y=150.dp))
+
+                        Image(painterResource(R.drawable.subtract), contentDescription = "",
+                            modifier = Modifier.offset(200.dp, 200.dp).alpha(moon))
 
 
                         Image(painterResource(R.drawable.ghost), contentDescription = "",
