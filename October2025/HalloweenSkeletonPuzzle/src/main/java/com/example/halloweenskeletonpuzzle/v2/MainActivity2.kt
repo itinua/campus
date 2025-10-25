@@ -2,6 +2,8 @@
 
 package com.example.halloweenskeletonpuzzle.v2
 
+import android.R.attr.animation
+import android.R.attr.top
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,7 +56,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -61,10 +63,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import com.example.halloweenskeletonpuzzle.R
 import com.example.halloweenskeletonpuzzle.RoadRageFontFamily
-import com.example.halloweenskeletonpuzzle.animateHead
 import com.example.halloweenskeletonpuzzle.toIntOffset
 import com.example.halloweenskeletonpuzzle.ui.theme.CampusTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlin.math.abs
 
 
 val padding = 10.dp
@@ -130,8 +133,10 @@ fun Modifier.simpleDrag(
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     if (event.type == PointerEventType.Press) {
                         onClickStart()
+                        println("sad-Press")
                     } else if (event.type == PointerEventType.Release) {
                         onClickFinish()
+                        println("sad-Release")
                     }
                 }
             }
@@ -161,8 +166,8 @@ fun Modifier.detectPositionAndSize(
 @Composable
 private fun ImageBoneItem(
     item: BoneItem,
-    onStateUpdate: (BoneItem) -> Unit,
-    modifier: Modifier = Modifier,
+    onStateUpdate: (BoneItem, onFinish: Boolean) -> Unit,
+    onClickFinish: (BoneItem) -> Unit,
     withMovement: Boolean = false,
 ) {
     var offset by remember { mutableStateOf(item.offset) }
@@ -173,26 +178,63 @@ private fun ImageBoneItem(
 
     val animateHead = animationHeadOnce(localAnimation == Animation.ANIMATE_HEAD)
 
+    var borderColor by remember { mutableStateOf(Color.White) }
+    var borderSize by remember { mutableStateOf(1.dp) }
+    var alpha by remember { mutableFloatStateOf(0.6f) }
 
-    LaunchedEffect(item.animation) {
-        if (item.animation == Animation.RED_HOME) {
-            onStateUpdate(
-                item.copy(borderColor = Color.Red)
-            )
+    if (item.isHighlight) {
+        borderSize = 2.dp
+    } else {
+        borderSize = 1.dp
+    }
+
+    if (item.isHighlight) {
+        alpha = 0.9f
+    } else {
+        if (item.type == BoneType.BOTTOM) {
+            alpha = 0.8f;
+        }
+        if (item.type == BoneType.TOP) {
+            alpha = 0.6f;
+        }
+    }
+    if (localAnimation == Animation.INIT) {
+        borderColor = Color.White
+    }
+
+    if (item.isFind && item.type == BoneType.TOP) {
+        borderSize = (-1).dp
+        alpha = 1f
+    }
+
+    if (item.isFind && item.type == BoneType.BOTTOM) {
+        borderSize = (-1).dp
+        alpha = 0f
+    }
+
+    LaunchedEffect(item.animation, item.isFind) {
+        if (item.animation == Animation.RED_HOME
+            && !item.isFind
+        ) {
+            borderColor = Color.Red
             localAnimation = Animation.NONE
             delay(100)
             localAnimation = Animation.ANIMATE_HEAD
             delay(1500)
             localAnimation = Animation.MOVE_HOME
-            onStateUpdate(
-                item.copy(borderColor = Color.White)
-            )
-            delay(1500)
+            borderColor = Color.Red
+            delay(100)
             localAnimation = Animation.INIT
-
         }
-        if (item.animation == Animation.ANIMATE_HEAD) {
+        if (item.animation == Animation.ANIMATE_HEAD && !item.isFind) {
             localAnimation = Animation.ANIMATE_HEAD
+            delay(1500)
+        }
+        if (item.animation == Animation.WHITE_HOME) {
+            borderColor = Color.White
+            borderSize = 1.dp
+            alpha = 0.8f
+            localAnimation = Animation.MOVE_HOME
             delay(1500)
         }
     }
@@ -202,26 +244,26 @@ private fun ImageBoneItem(
         painter = painterResource(item.img),
         contentDescription = "",
         colorFilter = ColorFilter.tint(Color.White),
-        modifier = modifier
+        modifier = Modifier
             .then(
                 if (withMovement)
                     Modifier.simpleDrag(
                         localAnimation == Animation.MOVE_HOME,
                         onClickStart = {
+                            println("onClickStart")
                             onStateUpdate(
-                                item.copy(animation = Animation.ANIMATE_HEAD, isMoving = true)
+                                item.copy(animation = Animation.ANIMATE_HEAD, isMoving = true),
+                                false
                             )
                         }, onClickFinish = {
-                            onStateUpdate(
-                                item.copy(animation = Animation.RED_HOME, isMoving = false)
-                            )
+                            onClickFinish(item)
                         }) else Modifier
             )
             .rotate(animateHead.value)
-            .alpha(item.alpha)
+            .alpha(alpha)
             .border(
-                item.borderSize,
-                item.borderColor,
+                borderSize,
+                borderColor,
                 RoundedCornerShape(1.dp)
             )
             .padding(10.dp)
@@ -229,13 +271,13 @@ private fun ImageBoneItem(
                 onPosition = {
                     offset = it
                     onStateUpdate(
-                        item.copy(offset = offset, size = size)
+                        item.copy(offset = offset, size = size), false
                     )
                 },
                 onSize = {
                     size = it.toSize()
                     onStateUpdate(
-                        item.copy(offset = offset, size = size)
+                        item.copy(offset = offset, size = size), false
                     )
                 }
             )
@@ -245,19 +287,29 @@ private fun ImageBoneItem(
 }
 
 enum class Animation {
-    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME
+    NONE, INIT, ANIMATE_HEAD, MOVE_HOME, RED_HOME, WHITE_HOME
+}
+
+enum class BoneType {
+    TOP, BOTTOM
 }
 
 data class BoneItem(
     val img: Int,
     val offset: Offset = Offset(0f, 0f),
     val size: Size = Size(0f, 0f),
-    val alpha: Float = 1f,
-    val borderSize: Dp = 1.dp,
+    val type: BoneType = BoneType.TOP,
     val isMoving: Boolean = false,
-    val borderColor: Color = Color.White,
-    val animation: Animation = Animation.INIT
+    val isHighlight: Boolean = false,
+    val isFind: Boolean = false,
+    val animation: Animation = Animation.INIT,
 ) {
+
+    fun isInPlace(second: BoneItem): Boolean {
+        println("${this.offset} + ${second.offset}")
+        return abs(this.offset.x - second.offset.x) < 30 &&
+                abs(this.offset.y - second.offset.y) < 30
+    }
 
 
     override fun toString(): String {
@@ -288,26 +340,26 @@ data class BonesState2(
 
     fun withTopStyle(): BonesState2 {
         return copy(
-            head = head.copy(alpha = 0.6f),
-            armLeft = armLeft.copy(alpha = 0.6f),
-            armRight = armRight.copy(alpha = 0.6f),
-            ribCage = ribCage.copy(alpha = 0.6f),
-            pelvis = pelvis.copy(alpha = 0.6f),
-            legLeft = legLeft.copy(alpha = 0.6f),
-            legRight = legRight.copy(alpha = 0.6f),
+            head = head.copy(type = BoneType.TOP),
+            armLeft = armLeft.copy(type = BoneType.TOP),
+            armRight = armRight.copy(type = BoneType.TOP),
+            ribCage = ribCage.copy(type = BoneType.TOP),
+            pelvis = pelvis.copy(type = BoneType.TOP),
+            legLeft = legLeft.copy(type = BoneType.TOP),
+            legRight = legRight.copy(type = BoneType.TOP),
         )
 
     }
 
     fun withBottomStyle(): BonesState2 {
         return copy(
-            head = head.copy(alpha = 0.9f),
-            armLeft = armLeft.copy(alpha = 0.9f),
-            armRight = armRight.copy(alpha = 0.9f),
-            ribCage = ribCage.copy(alpha = 0.9f),
-            pelvis = pelvis.copy(alpha = 0.9f),
-            legLeft = legLeft.copy(alpha = 0.9f),
-            legRight = legRight.copy(alpha = 0.9f),
+            head = head.copy(type = BoneType.BOTTOM),
+            armLeft = armLeft.copy(type = BoneType.BOTTOM),
+            armRight = armRight.copy(type = BoneType.BOTTOM),
+            ribCage = ribCage.copy(type = BoneType.BOTTOM),
+            pelvis = pelvis.copy(type = BoneType.BOTTOM),
+            legLeft = legLeft.copy(type = BoneType.BOTTOM),
+            legRight = legRight.copy(type = BoneType.BOTTOM),
         )
     }
 
@@ -336,90 +388,126 @@ fun Skeleton2() {
         var topBones by remember { mutableStateOf(BonesState2().withTopStyle()) }
         var bottomBones by remember { mutableStateOf(BonesState2().withBottomStyle()) }
 
-        val onTopUpdate: (BoneItem) -> Unit = { updatedItem ->
+        var isFinish by remember { mutableStateOf(false) }
+        var currentItem by remember { mutableStateOf(topBones.head) }
+
+        val onTopUpdate: (BoneItem, Boolean) -> Unit = { updatedItem, it ->
             topBones = topBones.updateItem(updatedItem)
         }
-        val onBottomUpdate: (BoneItem) -> Unit = { updatedItem ->
+        val onBottomUpdate: (BoneItem, Boolean) -> Unit = { updatedItem, it ->
             bottomBones = bottomBones.updateItem(updatedItem)
+            currentItem = updatedItem
         }
+
+        var findAll by remember { mutableStateOf(false) }
+
+        val onClickFinish: (BoneItem) -> Unit = {
+
+            val topItem = topBones.listBody.find {
+                it.isInPlace(currentItem)
+            }
+
+
+            println("onClickFinish ")
+
+            if (topItem == null) {
+                bottomBones = bottomBones.updateItem(
+                    currentItem.copy(
+                        animation = Animation.RED_HOME
+                    )
+                )
+            } else {
+                bottomBones = bottomBones.updateItem(
+                    currentItem.copy(
+                        isFind = true
+                    )
+                )
+                topBones = topBones.updateItem(
+                    topItem.copy(
+                        isFind = true
+                    )
+                )
+            }
+
+            findAll = topBones.listBody.all { it.isFind }
+            if (findAll) {
+                topBones = topBones.updateItem(
+                    topBones.head.copy(
+                        animation = Animation.ANIMATE_HEAD
+                    )
+                )
+            }
+
+
+        }
+
 
 
         LaunchedEffect(key1 = topBones, key2 = bottomBones) {
-            var cache = topBones
+            var cacheTop = topBones
 
-            val allNotMOve = bottomBones.listBody.all { !it.isMoving }
+            topBones.listBody.forEach { top ->
+                val isOverlap = currentItem.overlaps(top)
 
-            bottomBones.listBody.forEach { active ->
-                if (active.isMoving || allNotMOve) {
-                    topBones.listBody.forEach { top ->
-                        val isOverlap = active.overlaps(top)
-
-                        val topUpdated = if (isOverlap) {
-                            top.copy(borderSize = 3.dp, alpha = 0.8f)
-                        } else {
-                            top.copy(borderSize = 1.dp, alpha = 0.6f)
-                        }
-
-                        cache = cache.updateItem(topUpdated)
-
-                    }
-
-                    // cache = cache.updateItem(active.copy(stateGoHome= true))
-
+                val topUpdated = if (isOverlap) {
+                    top.copy(isHighlight = true)
+                } else {
+                    top.copy(isHighlight = false)
                 }
-            }
-            topBones = cache
+                cacheTop = cacheTop.updateItem(topUpdated)
 
+
+            }
+            topBones = cacheTop
         }
 
         Spacer(modifier = Modifier.height(60.dp))
 
-//        //if (false) {
-//        Text("${topBones.head.borderSize}", color = Color.White)
-//        Text(
-//            "Top: " +
-//                    "${topBones.head.size} \n" +
-//                    "${topBones.head.offset} \n",
-//            color = Color.White
-//        )
-//        Text(
-//            "Bottom: " +
-//                    "${bottomBones.head.size} \n" +
-//                    "${bottomBones.head.offset} \n", color = Color.White
-//        )
-//        //   }
+        if (false) {
+            Text(
+                "Top: ${topBones.head.isInPlace(bottomBones.head)} " +
+                        "${topBones.head.size} \n" +
+                        "${topBones.head.offset} \n",
+                color = Color.White
+            )
+            Text(
+                "Bottom: " +
+                        "${bottomBones.head.size} \n" +
+                        "${bottomBones.head.offset} \n", color = Color.White
+            )
+        }
 
-        ImageBoneItem(topBones.head, onTopUpdate)
+        ImageBoneItem(topBones.head, onTopUpdate, onClickFinish)
 
         Row {
             ImageBoneItem(
-                topBones.armLeft, onTopUpdate
+                topBones.armLeft, onTopUpdate, onClickFinish
             )
             Column {
                 ImageBoneItem(
                     topBones.ribCage,
-                    onTopUpdate
+                    onTopUpdate, onClickFinish
                 )
                 ImageBoneItem(
                     topBones.pelvis,
-                    onTopUpdate
+                    onTopUpdate, onClickFinish
                 )
             }
 
             ImageBoneItem(
                 topBones.armRight,
-                onTopUpdate
+                onTopUpdate, onClickFinish
             )
 
         }
         Row {
             ImageBoneItem(
                 topBones.legLeft,
-                onTopUpdate
+                onTopUpdate, onClickFinish
             )
             ImageBoneItem(
                 topBones.legRight,
-                onTopUpdate
+                onTopUpdate, onClickFinish
             )
 
         }
@@ -434,14 +522,14 @@ fun Skeleton2() {
                 Row {
                     ImageBoneItem(
                         item = bottomBones.legLeft,
-                        onStateUpdate = onBottomUpdate,
+                        onStateUpdate = onBottomUpdate, onClickFinish,
                         withMovement = true
                     )
 
                     Spacer(modifier = Modifier.size(padding))
                     ImageBoneItem(
                         item = bottomBones.armRight,
-                        onStateUpdate = onBottomUpdate,
+                        onStateUpdate = onBottomUpdate, onClickFinish,
                         withMovement = true
                     )
                 }
@@ -451,7 +539,7 @@ fun Skeleton2() {
 
                 ImageBoneItem(
                     item = bottomBones.head,
-                    onStateUpdate = onBottomUpdate,
+                    onStateUpdate = onBottomUpdate, onClickFinish,
                     withMovement = true
                 )
 
@@ -461,13 +549,13 @@ fun Skeleton2() {
             Column {
                 ImageBoneItem(
                     item = bottomBones.ribCage,
-                    onStateUpdate = onBottomUpdate,
+                    onStateUpdate = onBottomUpdate, onClickFinish,
                     withMovement = true
                 )
                 Spacer(modifier = Modifier.size(padding))
                 ImageBoneItem(
                     item = bottomBones.armLeft,
-                    onStateUpdate = onBottomUpdate,
+                    onStateUpdate = onBottomUpdate, onClickFinish,
                     withMovement = true
                 )
             }
@@ -476,13 +564,13 @@ fun Skeleton2() {
             Column {
                 ImageBoneItem(
                     item = bottomBones.legRight,
-                    onStateUpdate = onBottomUpdate,
+                    onStateUpdate = onBottomUpdate, onClickFinish,
                     withMovement = true
                 )
                 Spacer(modifier = Modifier.size(padding))
                 ImageBoneItem(
                     item = bottomBones.pelvis,
-                    onStateUpdate = onBottomUpdate,
+                    onStateUpdate = onBottomUpdate, onClickFinish,
                     withMovement = true
                 )
             }
@@ -490,25 +578,42 @@ fun Skeleton2() {
 
         }
 
-
         Spacer(modifier = Modifier.size(42.dp))
+        if (findAll) {
+            Button(
+                onClick = {
 
-        val scope = rememberCoroutineScope()
+                    topBones.listBody.forEach {
+                        topBones = topBones.updateItem(
+                            it.copy(
+                                isFind = false,
+                                isHighlight = false,
+                            )
+                        )
+                    }
 
-        Button(
-            onClick = {
+                    bottomBones.listBody.forEach {
+                        bottomBones = bottomBones.updateItem(
+                            it.copy(
+                                isFind = false,
+                                isHighlight = false,
+                                animation = Animation.WHITE_HOME
+                            )
+                        )
+                    }
 
-            },
-            shape = RoundedCornerShape(4.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF934A)),
-            modifier = Modifier.padding(bottom = 40.dp)
-        ) {
-            Text(
-                "He's back... and he remembers everything!",
-                fontSize = 28.sp,
-                fontFamily = RoadRageFontFamily,
-                color = Color.Black
-            )
+                },
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF934A)),
+                modifier = Modifier.padding(bottom = 40.dp)
+            ) {
+                Text(
+                    "He's back... and he remembers everything!",
+                    fontSize = 28.sp,
+                    fontFamily = RoadRageFontFamily,
+                    color = Color.Black
+                )
+            }
         }
 
     }
