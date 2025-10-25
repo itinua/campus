@@ -100,7 +100,7 @@ class MainActivity2 : ComponentActivity() {
 }
 
 @Composable
-fun Modifier.simpleDrag(): Modifier {
+fun Modifier.simpleDrag(onMove: (Boolean) -> Unit = {}): Modifier {
     var offset by remember { mutableStateOf(Offset.Zero) }
 
     var isMove by remember { mutableStateOf(false) }
@@ -122,8 +122,10 @@ fun Modifier.simpleDrag(): Modifier {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     if (event.type == PointerEventType.Press) {
                         isMove = true
+                        onMove(true)
                     } else if (event.type == PointerEventType.Release) {
                         isMove = false
+                        onMove(false)
                         offset = Offset.Zero
                     }
                 }
@@ -156,13 +158,19 @@ fun Modifier.detectPositionAndSize(
 private fun ImagePartWithDetection(
     item: BoneItem,
     onStateUpdate: (BoneItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    withMovement: Boolean = false,
 ) {
     var offset by remember { mutableStateOf(item.offset) }
     var size by remember { mutableStateOf(item.size) }
     ImagePart(
         item,
         modifier = modifier
+            .then(if (withMovement) Modifier.simpleDrag({
+                onStateUpdate(
+                    item.copy(isMoving = it)
+                )
+            }) else Modifier)
             .alpha(item.alpha)
             .border(
                 item.borderSize,
@@ -184,6 +192,9 @@ private fun ImagePartWithDetection(
                     )
                 }
             )
+
+
+
     )
 }
 
@@ -192,7 +203,8 @@ data class BoneItem(
     val offset: Offset = Offset(0f, 0f),
     val size: Size = Size(0f, 0f),
     val alpha: Float = 1f,
-    val borderSize: Dp = 1.dp
+    val borderSize: Dp = 1.dp,
+    val isMoving: Boolean = false
 ) {
 
 
@@ -221,6 +233,7 @@ data class BonesState2(
 
     val listBody = listOf(head, armLeft, armRight, ribCage, pelvis, legLeft, legRight)
 
+
     fun withTopStyle(): BonesState2 {
         return copy(
             head = head.copy(alpha = 0.6f),
@@ -246,13 +259,9 @@ data class BonesState2(
         )
     }
 
-    fun update(updatedItem: BoneItem): BonesState2 {
-        println("updatedItem ?")
+    fun updateItem(updatedItem: BoneItem): BonesState2 {
         return when (updatedItem.img) {
-            R.drawable.head -> {
-                println("updatedItem head"); copy(head = updatedItem)
-            }
-
+            R.drawable.head -> copy(head = updatedItem)
             R.drawable.arm_left -> copy(armLeft = updatedItem)
             R.drawable.arm_right -> copy(armRight = updatedItem)
             R.drawable.rib_cage -> copy(ribCage = updatedItem)
@@ -260,9 +269,7 @@ data class BonesState2(
             R.drawable.leg_left -> copy(legLeft = updatedItem)
             R.drawable.leg_right -> copy(legRight = updatedItem)
             else -> {
-                println("updatedItem this");
-                assert(false);
-                this
+                assert(false); this
             }
         }
 
@@ -277,23 +284,57 @@ fun Skeleton2() {
         var topBones by remember { mutableStateOf(BonesState2().withTopStyle()) }
         var bottomBones by remember { mutableStateOf(BonesState2().withBottomStyle()) }
 
+        val onTopUpdate: (BoneItem) -> Unit = { updatedItem ->
+            topBones = topBones.updateItem(updatedItem)
+        }
+        val onBottomUpdate: (BoneItem) -> Unit = { updatedItem ->
+            bottomBones = bottomBones.updateItem(updatedItem)
+        }
+        val onMove: (BoneItem, Boolean) -> Unit = { updatedItem, value ->
+            bottomBones = bottomBones.updateItem(updatedItem.copy(isMoving = value))
+        }
+
         LaunchedEffect(key1 = topBones, key2 = bottomBones) {
-            val isOverlap = topBones.head.overlaps(bottomBones.head)
-            if (isOverlap) {
-                topBones = topBones.copy(
-                    head = topBones.head.copy(
-                        alpha = 0.8f,
-                        borderSize = 2.dp
-                    )
-                )
-            } else {
-                topBones = topBones.copy(
-                    head = topBones.head.copy(
-                        alpha = 0.6f,
-                        borderSize = 1.dp
-                    )
-                )
+            //val isOverlap = topBones.head.overlaps(bottomBones.head)
+
+            val active = bottomBones.head
+
+            var cache = topBones
+            bottomBones.listBody.forEach { active ->
+                if (active.isMoving) {
+                    topBones.listBody.forEach { top ->
+                        val isOverlap = active.overlaps(top)
+
+                        val topUpdated = if (isOverlap) {
+                            top.copy(borderSize = 3.dp)
+                        } else {
+                            top.copy(borderSize = 1.dp)
+                        }
+
+                        cache = cache.updateItem(topUpdated)
+
+                    }
+                }
             }
+
+            topBones = cache
+
+//
+//            if (isOverlap) {
+//                topBones = topBones.copy(
+//                    head = topBones.head.copy(
+//                        alpha = 0.8f,
+//                        borderSize = 2.dp
+//                    )
+//                )
+//            } else {
+//                topBones = topBones.copy(
+//                    head = topBones.head.copy(
+//                        alpha = 0.6f,
+//                        borderSize = 1.dp
+//                    )
+//                )
+//            }
         }
 
         Spacer(modifier = Modifier.height(60.dp))
@@ -311,99 +352,101 @@ fun Skeleton2() {
                     "${bottomBones.head.offset} \n", color = Color.White
         )
 
-        ImagePartWithDetection(
-            topBones.head,
-            onStateUpdate = { topBones = topBones.copy(it) }
-        )
+        ImagePartWithDetection(topBones.head, onTopUpdate)
 
         Row {
             ImagePartWithDetection(
-                topBones.armLeft,
-                onStateUpdate = { }
+                topBones.armLeft, onTopUpdate
             )
             Column {
                 ImagePartWithDetection(
                     topBones.ribCage,
-                    onStateUpdate = { }
+                    onTopUpdate
                 )
                 ImagePartWithDetection(
                     topBones.pelvis,
-                    onStateUpdate = { }
+                    onTopUpdate
                 )
             }
 
             ImagePartWithDetection(
                 topBones.armRight,
-                onStateUpdate = { }
+                onTopUpdate
             )
 
         }
         Row {
             ImagePartWithDetection(
                 topBones.legLeft,
-                onStateUpdate = { }
+                onTopUpdate
             )
             ImagePartWithDetection(
                 topBones.legRight,
-                onStateUpdate = { }
+                onTopUpdate
             )
 
         }
         Spacer(modifier = Modifier.height(25.dp))
 
+        ///////////////////////////////////
+        ////////////// BOTTOM BONES ///////
+        ///////////////////////////////////
 
         Row {
             Column {
                 Row {
-                    ImagePart(
-                        bottomBones.legLeft,
-                        modifier = Modifier
+                    ImagePartWithDetection(
+                        item = bottomBones.legLeft,
+                        onStateUpdate = onBottomUpdate,
+                       withMovement = true
                     )
 
                     Spacer(modifier = Modifier.size(padding))
-                    ImagePart(
-                        bottomBones.armRight,
-                        modifier = Modifier
+                    ImagePartWithDetection(
+                        item = bottomBones.legRight,
+                        onStateUpdate = onBottomUpdate,
+                        withMovement = true
                     )
                 }
                 Spacer(modifier = Modifier.size(padding))
 
-                //2
+
+
                 ImagePartWithDetection(
                     item = bottomBones.head,
-                    onStateUpdate = {
-                        bottomBones = bottomBones.update(it)
-                    },
-                    modifier = Modifier
-                        .simpleDrag()
-
+                    onStateUpdate = onBottomUpdate,
+                    withMovement = true
                 )
 
 
             }
             Spacer(modifier = Modifier.size(padding))
             Column {
-                ImagePart(
-                    bottomBones.ribCage,
-                    modifier = Modifier
+                ImagePartWithDetection(
+                    item = bottomBones.ribCage,
+                    onStateUpdate = onBottomUpdate,
+                    withMovement = true
                 )
                 Spacer(modifier = Modifier.size(padding))
-                ImagePart(
-                    bottomBones.armLeft,
-                    modifier = Modifier
+                ImagePartWithDetection(
+                    item = bottomBones.armLeft,
+                    onStateUpdate = onBottomUpdate,
+                    withMovement = true
                 )
             }
 
             Spacer(modifier = Modifier.size(padding))
             Column {
-                ImagePart(
-                    bottomBones.legRight,
-                    modifier = Modifier
+                ImagePartWithDetection(
+                    item = bottomBones.legRight,
+                    onStateUpdate = onBottomUpdate,
+                    withMovement = true
                 )
                 Spacer(modifier = Modifier.size(padding))
-                ImagePart(
-                    bottomBones.pelvis,
-                    modifier = Modifier
+                ImagePartWithDetection(
+                    item = bottomBones.pelvis,
+                    onStateUpdate = onBottomUpdate,
+                    withMovement = true
                 )
             }
 
