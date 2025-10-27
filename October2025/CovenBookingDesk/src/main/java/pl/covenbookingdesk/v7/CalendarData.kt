@@ -9,7 +9,14 @@ data class CalendarDay(
     val date: LocalDate,
     val isCurrentMonth: Boolean,
     val isSelected: Boolean = false,
-    val isToday: Boolean = false
+    val isToday: Boolean = false,
+    val isReserved: Boolean = false,
+    val reservation: ReservationInfo? = null
+)
+
+data class ReservationInfo(
+    val guestName: String,
+    val notes: String? = null
 )
 
 data class CalendarMonth(
@@ -19,7 +26,11 @@ data class CalendarMonth(
 
 object CalendarUtils {
     
-    fun generateCalendarDays(yearMonth: YearMonth, selectedDate: LocalDate? = null): List<CalendarDay> {
+    fun generateCalendarDays(
+        yearMonth: YearMonth,
+        selectedDate: LocalDate? = null,
+        reservations: Map<LocalDate, ReservationInfo> = emptyMap()
+    ): List<CalendarDay> {
         val firstDayOfMonth = yearMonth.atDay(1)
         val lastDayOfMonth = yearMonth.atEndOfMonth()
         val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value % 7
@@ -36,7 +47,9 @@ object CalendarUtils {
                     date = date,
                     isCurrentMonth = false,
                     isSelected = date == selectedDate,
-                    isToday = date == today
+                    isToday = date == today,
+                    isReserved = reservations.containsKey(date),
+                    reservation = reservations[date]
                 )
             )
         }
@@ -48,7 +61,9 @@ object CalendarUtils {
                     date = date,
                     isCurrentMonth = true,
                     isSelected = date == selectedDate,
-                    isToday = date == today
+                    isToday = date == today,
+                    isReserved = reservations.containsKey(date),
+                    reservation = reservations[date]
                 )
             )
         }
@@ -62,7 +77,9 @@ object CalendarUtils {
                     date = date,
                     isCurrentMonth = false,
                     isSelected = date == selectedDate,
-                    isToday = date == today
+                    isToday = date == today,
+                    isReserved = reservations.containsKey(date),
+                    reservation = reservations[date]
                 )
             )
         }
@@ -70,12 +87,16 @@ object CalendarUtils {
         return days
     }
     
-    fun generateMonthsForYear(year: Int, selectedDate: LocalDate? = null): List<CalendarMonth> {
+    fun generateMonthsForYear(
+        year: Int,
+        selectedDate: LocalDate? = null,
+        reservations: Map<LocalDate, ReservationInfo> = emptyMap()
+    ): List<CalendarMonth> {
         return (1..12).map { month ->
             val yearMonth = YearMonth.of(year, month)
             CalendarMonth(
                 yearMonth = yearMonth,
-                days = generateCalendarDays(yearMonth, selectedDate)
+                days = generateCalendarDays(yearMonth, selectedDate, reservations)
             )
         }
     }

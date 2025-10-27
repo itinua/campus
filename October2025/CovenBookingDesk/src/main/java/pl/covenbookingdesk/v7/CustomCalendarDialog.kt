@@ -289,28 +289,49 @@ private fun DayCell(
     textWhite: Color,
     textGray: Color
 ) {
+    val backgroundColor = when {
+        isSelected && day.isCurrentMonth -> textWhite
+        day.isReserved && day.isCurrentMonth -> Color(0xFFFF6B6B)
+        else -> Color.Transparent
+    }
+    
+    val textColor = when {
+        isSelected -> Color(0xFF5A4A8F)
+        day.isReserved -> Color.White
+        else -> textWhite
+    }
+    
     Box(
         modifier = Modifier
             .size(40.dp)
             .aspectRatio(1f)
             .padding(2.dp)
             .clip(CircleShape)
-            .background(
-                if (isSelected && day.isCurrentMonth) textWhite else Color.Transparent
-            )
-            .clickable(enabled = day.isCurrentMonth) { 
-                if (day.isCurrentMonth) onDateSelected() 
+            .background(backgroundColor)
+            .clickable(enabled = day.isCurrentMonth && !day.isReserved) {
+                if (day.isCurrentMonth && !day.isReserved) onDateSelected()
             },
         contentAlignment = Alignment.Center
     ) {
         if (day.isCurrentMonth) {
-            Text(
-                text = day.date.dayOfMonth.toString(),
-                fontSize = 16.sp,
-                color = if (isSelected) Color(0xFF5A4A8F) else textWhite,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                textAlign = TextAlign.Center
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = day.date.dayOfMonth.toString(),
+                    fontSize = if (day.isReserved) 14.sp else 16.sp,
+                    color = textColor,
+                    fontWeight = if (isSelected || day.isReserved) FontWeight.Bold else FontWeight.Normal,
+                    textAlign = TextAlign.Center
+                )
+                if (day.isReserved) {
+                    Box(
+                        modifier = Modifier
+                            .size(4.dp)
+                            .background(Color.White, CircleShape)
+                    )
+                }
+            }
         }
     }
 }
