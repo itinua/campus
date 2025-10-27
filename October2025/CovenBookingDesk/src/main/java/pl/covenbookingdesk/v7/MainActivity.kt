@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.covenbookingdesk.R
 import pl.covenbookingdesk.ui.theme.AppTheme
+import pl.covenbookingdesk.ui.theme.colors_bg
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -120,6 +121,29 @@ class MainActivity : ComponentActivity() {
                                     modelItems = newList
                                 })
                             }
+                        }
+
+                        Spacer(Modifier.height(40.dp))
+
+                        Text(
+                            "No reservation", color = Color.White,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        ItemButton("Choose arrival date", onClick = {
+
+                        })
+                         Spacer(modifier = Modifier.weight(1f))
+                        Button(onClick ={},
+                                shape = RoundedCornerShape(4.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF934A)),
+                            modifier = Modifier.padding(bottom = 40.dp)
+                        ) {
+                            Text("NYX is booked for the Gathering",
+                                color = colors_bg,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium
+                            )
                         }
 
                     }

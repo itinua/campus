@@ -15,12 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pl.covenbookingdesk.R
 import pl.covenbookingdesk.ui.theme.AppTheme
 import pl.covenbookingdesk.ui.theme.colors_frame_active
+import pl.covenbookingdesk.ui.theme.colors_frame_inactive
 import pl.covenbookingdesk.ui.theme.colors_outline_active
 
 
@@ -33,10 +35,11 @@ fun ComposableItem(witch: Whitch, onMyClick: (Whitch) -> Unit) {
                 .clickable(onClick = {
                     onMyClick(witch)
                 })
-                .then(if(witch.isSelected)
-                    Modifier.background(color = colors_frame_active)
+                .then(
+                    if (witch.isSelected)
+                        Modifier.background(color = colors_frame_active)
                     else
-                    Modifier.background(color = colors_outline_active)
+                        Modifier.background(color = colors_outline_active)
                 )
 
                 .align(Alignment.Center),
@@ -52,6 +55,10 @@ fun ComposableItem(witch: Whitch, onMyClick: (Whitch) -> Unit) {
                 Image(
                     painter = painterResource(R.drawable.frame),
                     modifier = Modifier.size(120.dp),
+                    colorFilter = ColorFilter.tint(
+                        if (witch.isSelected) colors_outline_active else
+                            colors_frame_inactive
+                    ),
                     contentDescription = ""
                 )
             }
@@ -89,6 +96,6 @@ fun ComposableItem(witch: Whitch, onMyClick: (Whitch) -> Unit) {
 @Composable
 fun ComposableItemPreview() {
     AppTheme {
-        ComposableItem(witchList[1],{})
+        ComposableItem(witchList[1], {})
     }
 }
