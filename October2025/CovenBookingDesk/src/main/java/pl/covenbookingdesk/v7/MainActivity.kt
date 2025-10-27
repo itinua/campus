@@ -45,17 +45,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import pl.covenbookingdesk.ui.theme.Project2Theme
+import pl.covenbookingdesk.ui.theme.AppTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+
 class MainActivity : ComponentActivity() {
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         setContent {
-            Project2Theme {
+            AppTheme {
                 CalendarScreen()
             }
         }
@@ -74,11 +75,11 @@ fun CalendarScreen() {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val purpleBackground = Color(0xFF5A4A8F)
     var selectedReservation by remember { mutableStateOf<Pair<LocalDate, ReservationInfo>?>(null) }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         "Coven Booking Desk",
                         fontWeight = FontWeight.Bold
@@ -140,7 +141,7 @@ fun CalendarScreen() {
                         color = Color.Gray,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    
+
                     Text(
                         text = CalendarUtils.formatSelectedDate(uiState.selectedDate),
                         fontSize = 24.sp,
@@ -148,7 +149,7 @@ fun CalendarScreen() {
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    
+
                     val selectedDateReservation = uiState.reservations[uiState.selectedDate]
                     if (selectedDateReservation != null) {
                         Card(
@@ -186,7 +187,7 @@ fun CalendarScreen() {
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
-                    
+
                     Button(
                         onClick = { viewModel.openDialog() },
                         modifier = Modifier
@@ -205,7 +206,7 @@ fun CalendarScreen() {
                     }
                 }
             }
-            
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -225,13 +226,13 @@ fun CalendarScreen() {
                         color = purpleBackground,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
-                    
+
                     val upcomingReservations = uiState.reservations
                         .filter { it.key >= java.time.LocalDate.now() }
                         .toList()
                         .sortedBy { it.first }
                         .take(5)
-                    
+
                     if (upcomingReservations.isEmpty()) {
                         Text(
                             text = "No upcoming reservations",
@@ -274,7 +275,10 @@ fun CalendarScreen() {
                                     Box(
                                         modifier = Modifier
                                             .size(8.dp)
-                                            .background(Color(0xFFFF6B6B), shape = androidx.compose.foundation.shape.CircleShape)
+                                            .background(
+                                                Color(0xFFFF6B6B),
+                                                shape = androidx.compose.foundation.shape.CircleShape
+                                            )
                                     )
                                 }
                             }
@@ -282,9 +286,9 @@ fun CalendarScreen() {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -304,7 +308,7 @@ fun CalendarScreen() {
                         color = purpleBackground,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
@@ -312,7 +316,10 @@ fun CalendarScreen() {
                         Box(
                             modifier = Modifier
                                 .size(20.dp)
-                                .background(Color(0xFFFF6B6B), shape = androidx.compose.foundation.shape.CircleShape)
+                                .background(
+                                    Color(0xFFFF6B6B),
+                                    shape = androidx.compose.foundation.shape.CircleShape
+                                )
                         )
                         Text(
                             text = "Reserved Date",
@@ -321,7 +328,7 @@ fun CalendarScreen() {
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
-                    
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
@@ -329,9 +336,15 @@ fun CalendarScreen() {
                         Box(
                             modifier = Modifier
                                 .size(20.dp)
-                                .background(Color.White, shape = androidx.compose.foundation.shape.CircleShape)
+                                .background(
+                                    Color.White,
+                                    shape = androidx.compose.foundation.shape.CircleShape
+                                )
                                 .padding(1.dp)
-                                .background(purpleBackground, shape = androidx.compose.foundation.shape.CircleShape)
+                                .background(
+                                    purpleBackground,
+                                    shape = androidx.compose.foundation.shape.CircleShape
+                                )
                         )
                         Text(
                             text = "Selected Date",
@@ -342,10 +355,10 @@ fun CalendarScreen() {
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(80.dp))
         }
-        
+
         if (uiState.isDialogOpen) {
             CustomCalendarDialog(
                 selectedDate = uiState.selectedDate,
@@ -361,7 +374,7 @@ fun CalendarScreen() {
                 }
             )
         }
-        
+
         if (uiState.isBookingDialogOpen) {
             BookingDialog(
                 selectedDate = uiState.selectedDate,
@@ -373,7 +386,7 @@ fun CalendarScreen() {
                 }
             )
         }
-        
+
         selectedReservation?.let { (date, reservation) ->
             ReservationDetailsDialog(
                 reservation = reservation,
