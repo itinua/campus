@@ -31,7 +31,7 @@ fun ComposableItem(witch: Whitch, onMyClick: (Whitch) -> Unit) {
 
             Modifier
                 .clickable(onClick = {
-                    onMyClick(witch.copy(isSelected = !witch.isSelected))
+                    onMyClick(witch)
                 })
                 .then(if(witch.isSelected)
                     Modifier.background(color = colors_frame_active)

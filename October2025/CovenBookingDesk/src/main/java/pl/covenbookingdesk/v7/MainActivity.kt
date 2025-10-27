@@ -107,8 +107,11 @@ class MainActivity : ComponentActivity() {
                             items(modelItems.size) { id ->
                                 val  current = modelItems[id]
                                 ComposableItem(current,{updatedWhitch->
-                                    val newList = modelItems.map { currentWhitch ->
+
+                                    val newList = modelItems.map { currentWhitchT ->
+                                        val currentWhitch = currentWhitchT.copy(isSelected = false)
                                         if (currentWhitch.imageId == updatedWhitch.imageId) {
+                                            val updatedWhitch = updatedWhitch.copy(isSelected = !updatedWhitch.isSelected)
                                             updatedWhitch
                                         } else {
                                             currentWhitch
