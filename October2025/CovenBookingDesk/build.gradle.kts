@@ -33,13 +33,20 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
     kotlinOptions {
+
         jvmTarget = "11"
+        //freeCompilerArgs = listOf("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
     }
     buildFeatures {
         compose = true
     }
 }
-
+kotlin{
+    compilerOptions {
+        optIn.add("kotlin.RequiresOptIn")
+        optIn.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+    }
+}
 
 dependencies {
 

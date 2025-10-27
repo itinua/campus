@@ -1,6 +1,20 @@
 package pl.covenbookingdesk.ui.theme
 import androidx.compose.ui.graphics.Color
 
+
+
+val colors_bg = Color(0xFF1A0D39)
+val colors_toast_bg= Color(0xFFFF934A)
+val colors_text_active= Color(0xFF39271A)
+val colors_text_primary= Color(0xFFF5F3EF)
+val colors_text_secondary= Color(0xFFD2C6ED)
+val colors_text_disabled= Color(0xFF9276CF)
+val colors_frame_active= Color(0xFFD2B5A0)
+val colors_frame_inactive= Color(0xFF7A60B5)
+val colors_outline_active= Color(0xFF462F78)
+val colors_outline_inactive= Color(0xFF2C1B53)
+val colors_slot= Color(0xFF533E82)
+
 val primaryLight = Color(0xFF415F91)
 val onPrimaryLight = Color(0xFFFFFFFF)
 val primaryContainerLight = Color(0xFFD6E3FF)

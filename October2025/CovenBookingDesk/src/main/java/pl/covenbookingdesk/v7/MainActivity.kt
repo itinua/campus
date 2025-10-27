@@ -3,7 +3,9 @@ package pl.covenbookingdesk.v7
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,6 +31,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -45,10 +50,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import pl.covenbookingdesk.R
 import pl.covenbookingdesk.ui.theme.AppTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+
+data class Whitch(
+    val name:String,
+    @DrawableRes val imageId: Int,
+    @DrawableRes val starId: Int,
+    val isSelected: Boolean=false
+)
+
+val witchList = listOf(
+    Whitch("Morgana",R.drawable.w1,R.drawable.star),
+    Whitch("Selene",R.drawable.w2,R.drawable.property_1_moon),
+    Whitch("Hecate",R.drawable.w3,R.drawable.star),
+    Whitch("Elvira",R.drawable.w4,R.drawable.property_1_moon),
+    Whitch("Nyx",R.drawable.w5,R.drawable.star),
+    Whitch("Circe",R.drawable.w6,R.drawable.property_1_moon),
+)
 
 class MainActivity : ComponentActivity() {
 
@@ -57,11 +79,53 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
-                CalendarScreen()
+                //CalendarScreen()
+                Box {
+                    BackgrounImage()
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(Modifier.height(40.dp))
+                        Text(
+                            "Coven Booking Desk",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.displaySmall,
+                            color = Color.White
+                        )
+
+
+                        var modelItems by remember { mutableStateOf(witchList)  }
+
+
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 120.dp),
+                            modifier = Modifier.padding(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(modelItems.size) { id ->
+                                val  current = modelItems[id]
+                                ComposableItem(current,{updatedWhitch->
+                                    val newList = modelItems.map { currentWhitch ->
+                                        if (currentWhitch.imageId == updatedWhitch.imageId) {
+                                            updatedWhitch
+                                        } else {
+                                            currentWhitch
+                                        }
+                                    }
+                                    modelItems = newList
+                                })
+                            }
+                        }
+
+                    }
+                }
             }
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
