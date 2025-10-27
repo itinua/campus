@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,6 +39,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import pl.covenbookingdesk.R
@@ -58,19 +62,19 @@ import java.time.format.DateTimeFormatter
 
 
 data class Whitch(
-    val name:String,
+    val name: String,
     @DrawableRes val imageId: Int,
     @DrawableRes val starId: Int,
-    val isSelected: Boolean=false
+    val isSelected: Boolean = false
 )
 
 val witchList = listOf(
-    Whitch("Morgana",R.drawable.w1,R.drawable.star),
-    Whitch("Selene",R.drawable.w2,R.drawable.property_1_moon),
-    Whitch("Hecate",R.drawable.w3,R.drawable.star),
-    Whitch("Elvira",R.drawable.w4,R.drawable.property_1_moon),
-    Whitch("Nyx",R.drawable.w5,R.drawable.star),
-    Whitch("Circe",R.drawable.w6,R.drawable.property_1_moon),
+    Whitch("Morgana", R.drawable.w1, R.drawable.star),
+    Whitch("Selena", R.drawable.w2, R.drawable.property_1_moon),
+    Whitch("Hecate", R.drawable.w3, R.drawable.star),
+    Whitch("Elvira", R.drawable.w4, R.drawable.property_1_moon),
+    Whitch("Nyx", R.drawable.w5, R.drawable.star),
+    Whitch("Circe", R.drawable.w6, R.drawable.property_1_moon),
 )
 
 class MainActivity : ComponentActivity() {
@@ -78,77 +82,148 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
+
         setContent {
             AppTheme {
+                MainContent()
                 //CalendarScreen()
-                Box {
-                    BackgrounImage()
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Spacer(Modifier.height(40.dp))
-                        Text(
-                            "Coven Booking Desk",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.displaySmall,
-                            color = Color.White
-                        )
 
 
-                        var modelItems by remember { mutableStateOf(witchList)  }
+//                val viewModel = viewModel<BookingViewModel>()
+//
+//                val witch = "Selena"
+//
+//                val bookings by viewModel.getBookingsByWitch(witch).collectAsState(emptyList())
+//                LazyColumn {
+//                    items(bookings){item->
+//                        Text("Booking ${item.date} ${item.slot}")
+//                    }
+//                }
+//                Button(onClick = {
+//                    viewModel.insertBookings("2023-04-34", SlotTime.SLOT_0200, witch)
+//                }) {
+//                    Text("Add")
+//                }
 
 
-                        LazyVerticalGrid(
-                            columns = GridCells.Adaptive(minSize = 120.dp),
-                            modifier = Modifier.padding(6.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            items(modelItems.size) { id ->
-                                val  current = modelItems[id]
-                                ComposableItem(current,{updatedWhitch->
+            }
+        }
+    }
+}
 
-                                    val newList = modelItems.map { currentWhitchT ->
-                                        val currentWhitch = currentWhitchT.copy(isSelected = false)
-                                        if (currentWhitch.imageId == updatedWhitch.imageId) {
-                                            val updatedWhitch = updatedWhitch.copy(isSelected = !updatedWhitch.isSelected)
-                                            updatedWhitch
-                                        } else {
-                                            currentWhitch
-                                        }
-                                    }
-                                    modelItems = newList
-                                })
+@Composable
+fun MainContent() {
+    val viewModel = viewModel<BookingViewModel>()
+    var currentWitch by remember { mutableStateOf("") }
+    var currentDate by remember { mutableStateOf("") }
+    val bookingsByWitch by viewModel.getBookingsByWitch(currentWitch).collectAsState(emptyList())
+    val bookingsByDate by viewModel.getBookingsByDate(currentDate).collectAsState(emptyList())
+
+    Box {
+        BackgrounImage()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(Modifier.height(40.dp))
+            Text(
+                "Coven Booking Desk",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.displaySmall,
+                color = Color.White
+            )
+
+
+            var modelItems by remember { mutableStateOf(witchList) }
+
+
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 120.dp),
+                modifier = Modifier.padding(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                items(modelItems.size) { id ->
+                    val current = modelItems[id]
+                    ComposableItem(current, { updatedWhitch ->
+
+
+                        currentWitch = updatedWhitch.name
+
+                        val newList = modelItems.map { currentWhitchT ->
+                            val currentWhitch = currentWhitchT.copy(isSelected = false)
+                            if (currentWhitch.imageId == updatedWhitch.imageId) {
+                                val updatedWhitch =
+                                    updatedWhitch.copy(isSelected = !updatedWhitch.isSelected)
+                                updatedWhitch
+                            } else {
+                                currentWhitch
                             }
                         }
 
-                        Spacer(Modifier.height(40.dp))
 
-                        Text(
-                            "No reservation", color = Color.White,
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        modelItems = newList
+                    })
+                }
+            }
 
-                        ItemButton("Choose arrival date", onClick = {
+            Spacer(Modifier.height(40.dp))
 
-                        })
-                         Spacer(modifier = Modifier.weight(1f))
-                        Button(onClick ={},
-                                shape = RoundedCornerShape(4.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF934A)),
-                            modifier = Modifier.padding(bottom = 40.dp)
-                        ) {
-                            Text("NYX is booked for the Gathering",
-                                color = colors_bg,
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
+            Text("Size By date: ${bookingsByDate.size}", color = Color.White)
 
+            if (bookingsByWitch.isEmpty()) {
+                Text(
+                    "No reservation", color = Color.White,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            } else {
+                LazyColumn {
+                    items(bookingsByWitch) {
+                        Text("Booked ${it.date} ${it.slot.timeSlot}", color = Color.White)
                     }
                 }
             }
+
+
+            var isShowDialg by remember { mutableStateOf(false) }
+            if (isShowDialg) {
+                currentDate = "2025-03-23"
+                Dialog(onDismissRequest = {
+                    isShowDialg = false
+                }) {
+                    SlotDialog(
+                        bookingsByDate,
+                        currentDate,
+                        onClose = { isShowDialg = false },
+                        onSlotSelected = { slot ->
+                            if (currentWitch.isNotEmpty()) {
+                                viewModel.insertBookings(currentDate, slot, currentWitch)
+                                isShowDialg = false
+                            }
+                        })
+                }
+            }
+
+
+            ItemButton("Choose arrival date", onClick = {
+                isShowDialg = true
+            })
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = {},
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF934A)),
+                modifier = Modifier.padding(bottom = 40.dp)
+            ) {
+                Text(
+                    "NYX is booked for the Gathering",
+                    color = colors_bg,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
         }
     }
 }

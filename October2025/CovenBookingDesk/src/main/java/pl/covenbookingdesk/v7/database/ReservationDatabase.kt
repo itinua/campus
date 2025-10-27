@@ -7,15 +7,17 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(
-    entities = [ReservationEntity::class],
+    entities = [ReservationEntity::class, BookingEntity::class],
     version = 1,
     exportSchema = false
 )
-@TypeConverters(DateConverters::class)
+@TypeConverters(DateConverters::class,
+        SlotTypeConverter::class)
 abstract class ReservationDatabase : RoomDatabase() {
     
     abstract fun reservationDao(): ReservationDao
-    
+    abstract fun bookingDao(): BookingDao
+
     companion object {
         @Volatile
         private var INSTANCE: ReservationDatabase? = null
@@ -25,7 +27,7 @@ abstract class ReservationDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     ReservationDatabase::class.java,
-                    "reservation_database"
+                    "room1"
                 ).build()
                 INSTANCE = instance
                 instance
