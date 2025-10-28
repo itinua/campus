@@ -65,32 +65,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-
-
         setContent {
             AppTheme {
                 MainContent()
-                //CalendarScreen()
-
-
-//                val viewModel = viewModel<BookingViewModel>()
-//
-//                val witch = "Selena"
-//
-//                val bookings by viewModel.getBookingsByWitch(witch).collectAsState(emptyList())
-//                LazyColumn {
-//                    items(bookings){item->
-//                        Text("Booking ${item.date} ${item.slot}")
-//                    }
-//                }
-//                Button(onClick = {
-//                    viewModel.insertBookings("2023-04-34", SlotTime.SLOT_0200, witch)
-//                }) {
-//                    Text("Add")
-//                }
-
-
             }
         }
     }
@@ -147,8 +124,6 @@ fun MainContent() {
             }
 
             Spacer(Modifier.height(40.dp))
-
-            //Text("Size By date: ${bookingsByDate.size}", color = Color.White)
 
             if (bookingsByWitch.isEmpty()) {
                 if (currentWitch.isNotEmpty()) {
