@@ -32,7 +32,6 @@ object CalendarUtils {
         reservations: Map<LocalDate, ReservationInfo> = emptyMap()
     ): List<CalendarDay> {
         val firstDayOfMonth = yearMonth.atDay(1)
-        val lastDayOfMonth = yearMonth.atEndOfMonth()
         val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value % 7
         val today = LocalDate.now()
         
