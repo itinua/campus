@@ -1,14 +1,7 @@
 pluginManagement {
     repositories {
-        google {
-            content {
-                includeGroupByRegex("com\\.android.*")
-                includeGroupByRegex("com\\.google.*")
-                includeGroupByRegex("androidx.*")
-            }
-        }
-        mavenCentral()
         google()
+        mavenCentral()
         gradlePluginPortal()
     }
 }
@@ -17,6 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
+
     }
 }
 
@@ -26,3 +21,4 @@ include(":October2025:PumpkinSplash")
 include(":October2025:CovenBookingDesk")
 include(":October2025:HauntedThemeSwitcher")
 include(":October2025:HalloweenSkeletonPuzzle")
+include(":LazyPizzaApp")
