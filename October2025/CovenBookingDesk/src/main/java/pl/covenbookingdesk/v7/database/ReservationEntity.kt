@@ -5,15 +5,6 @@ import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import java.time.LocalDate
 
-@Entity(tableName = "reservations")
-data class ReservationEntity(
-    @PrimaryKey
-    val date: LocalDate,
-    val guestName: String,
-    val notes: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
-)
-
 
 enum class SlotTime(val timeSlot: String) {
     SLOT_2300("23:00"),

@@ -34,12 +34,15 @@ import pl.covenbookingdesk.ui.theme.colors_slot
 import pl.covenbookingdesk.ui.theme.colors_text_secondary
 import pl.covenbookingdesk.v7.database.BookingEntity
 import pl.covenbookingdesk.v7.database.SlotTime
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
 @Composable
 fun SlotDialog(
+    date: LocalDate,
     bookingsByDate: List<BookingEntity>,
-    date: String, onClose: () -> Unit, onSlotSelected: (SlotTime) -> Unit
+    onClose: () -> Unit, onSlotSelected: (SlotTime) -> Unit
 ) {
     Column(
         Modifier
@@ -63,7 +66,7 @@ fun SlotDialog(
                 append("Times Slots for ")
             }
             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) {
-                append(date)
+                append(date.format(DateTimeFormatter.ofPattern("YYYY-MM-DD")))
             }
         }
 
@@ -114,7 +117,7 @@ fun SlotDialog(
 @Composable
 fun SlotDialogPreview() {
     AppTheme {
-        SlotDialog(listOf(),"30 oct 2025", {}, {})
+        SlotDialog( LocalDate.now(), listOf(),{}, {})
     }
 }
 

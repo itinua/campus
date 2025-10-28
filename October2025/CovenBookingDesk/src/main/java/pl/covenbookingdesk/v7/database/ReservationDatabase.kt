@@ -7,27 +7,27 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(
-    entities = [ReservationEntity::class, BookingEntity::class],
+    entities = [BookingEntity::class],
     version = 1,
     exportSchema = false
 )
-@TypeConverters(DateConverters::class,
-        SlotTypeConverter::class)
+@TypeConverters(
+    SlotTypeConverter::class
+)
 abstract class ReservationDatabase : RoomDatabase() {
-    
-    abstract fun reservationDao(): ReservationDao
+
     abstract fun bookingDao(): BookingDao
 
     companion object {
         @Volatile
         private var INSTANCE: ReservationDatabase? = null
-        
+
         fun getDatabase(context: Context): ReservationDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     ReservationDatabase::class.java,
-                    "room1"
+                    "room2"
                 ).build()
                 INSTANCE = instance
                 instance

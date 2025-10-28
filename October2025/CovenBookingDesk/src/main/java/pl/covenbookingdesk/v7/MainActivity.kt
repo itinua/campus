@@ -1,5 +1,6 @@
 package pl.covenbookingdesk.v7
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -112,6 +113,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@SuppressLint("RememberReturnType")
 @Composable
 fun MainContent() {
     val viewModel = viewModel<BookingViewModel>()
@@ -186,20 +188,67 @@ fun MainContent() {
             }
 
 
-            var isShowDialg by remember { mutableStateOf(false) }
-            if (isShowDialg) {
+            var isShowDateDialog by remember { mutableStateOf(false) }
+            var isShowSlotDialog by remember { mutableStateOf(false) }
+            var dialogDate by remember { mutableStateOf(LocalDate.now()) }
+
+            if (isShowDateDialog) {
                 currentDate = "2025-03-23"
+
+
+                val calendarData: List<CalendarMonth> = remember {
+
+                    val currentYear = 2025
+                    val previousYear = currentYear - 1
+                    val nextYear = currentYear + 1
+
+                    val allMonths = mutableListOf<CalendarMonth>()
+
+                    allMonths.addAll(
+                        CalendarUtils.generateMonthsForYear(
+                            previousYear,
+                            LocalDate.now()
+                        )
+                    )
+                    allMonths.addAll(
+                        CalendarUtils.generateMonthsForYear(
+                            currentYear,
+                            LocalDate.now()
+                        )
+                    )
+                    allMonths.addAll(CalendarUtils.generateMonthsForYear(nextYear, LocalDate.now()))
+                    allMonths
+                }
+
+                CustomCalendarDialog(
+                    selectedDate = dialogDate,
+                    calendarMonths = calendarData,
+                    onDateSelected = { date ->
+                        dialogDate = date
+                    },
+                    onDismiss = {
+                        isShowDateDialog = false
+                    },
+                    onConfirm = {
+                        isShowDateDialog = false
+                        isShowSlotDialog = true
+                    }
+                )
+
+            }
+
+            if (isShowSlotDialog) {
                 Dialog(onDismissRequest = {
-                    isShowDialg = false
+                    isShowSlotDialog = false
                 }) {
                     SlotDialog(
+                        dialogDate,
                         bookingsByDate,
-                        currentDate,
-                        onClose = { isShowDialg = false },
+                        onClose = { isShowSlotDialog = false },
                         onSlotSelected = { slot ->
                             if (currentWitch.isNotEmpty()) {
                                 viewModel.insertBookings(currentDate, slot, currentWitch)
-                                isShowDialg = false
+                                isShowSlotDialog = false
                             }
                         })
                 }
@@ -207,7 +256,7 @@ fun MainContent() {
 
 
             ItemButton("Choose arrival date", onClick = {
-                isShowDialg = true
+                isShowDateDialog = true
             })
             Spacer(modifier = Modifier.weight(1f))
             Button(
@@ -257,7 +306,7 @@ fun CalendarScreen() {
                 ),
                 actions = {
                     IconButton(
-                        onClick = { viewModel.clearAllReservations() }
+                        onClick = { }
                     ) {
                         Icon(
                             Icons.Default.Delete,
@@ -525,10 +574,24 @@ fun CalendarScreen() {
             Spacer(modifier = Modifier.height(80.dp))
         }
 
+        val calendarData: List<CalendarMonth> = remember {
+
+            val currentYear = 2025
+            val previousYear = currentYear - 1
+            val nextYear = currentYear + 1
+
+            val allMonths = mutableListOf<CalendarMonth>()
+
+            allMonths.addAll(CalendarUtils.generateMonthsForYear(previousYear, LocalDate.now()))
+            allMonths.addAll(CalendarUtils.generateMonthsForYear(currentYear, LocalDate.now()))
+            allMonths.addAll(CalendarUtils.generateMonthsForYear(nextYear, LocalDate.now()))
+            allMonths
+        }
+
         if (uiState.isDialogOpen) {
             CustomCalendarDialog(
                 selectedDate = uiState.selectedDate,
-                calendarMonths = uiState.calendarMonths,
+                calendarMonths = calendarData,
                 onDateSelected = { date ->
                     viewModel.selectDate(date)
                 },
@@ -545,7 +608,6 @@ fun CalendarScreen() {
             BookingDialog(
                 selectedDate = uiState.selectedDate,
                 onConfirm = { guestName, notes ->
-                    viewModel.makeReservation(guestName, notes)
                 },
                 onDismiss = {
                     viewModel.closeBookingDialog()
@@ -558,7 +620,6 @@ fun CalendarScreen() {
                 reservation = reservation,
                 date = date,
                 onCancel = {
-                    viewModel.cancelReservation(date)
                     selectedReservation = null
                 },
                 onDismiss = {
