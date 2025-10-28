@@ -12,7 +12,8 @@ import androidx.room.TypeConverters
     exportSchema = false
 )
 @TypeConverters(
-    SlotTypeConverter::class
+    SlotTypeConverter::class, DateTypeConverter::class
+
 )
 abstract class ReservationDatabase : RoomDatabase() {
 
@@ -27,7 +28,7 @@ abstract class ReservationDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     ReservationDatabase::class.java,
-                    "room2"
+                    "room3"
                 ).build()
                 INSTANCE = instance
                 instance

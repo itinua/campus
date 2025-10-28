@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface BookingDao {
@@ -16,7 +17,7 @@ interface BookingDao {
     suspend fun deleteBooking(item: BookingEntity)
 
     @Query("SELECT * FROM booking WHERE date = :date")
-    fun getAllBookingByDate(date: String): Flow<List<BookingEntity>>
+    fun getAllBookingByDate(date: LocalDate): Flow<List<BookingEntity>>
 
     @Query("SELECT * FROM booking WHERE witch = :witch")
     fun getAllBookingByWitch(witch: String): Flow<List<BookingEntity>>

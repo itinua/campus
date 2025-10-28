@@ -66,7 +66,8 @@ fun SlotDialog(
                 append("Times Slots for ")
             }
             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color.White)) {
-                append(date.format(DateTimeFormatter.ofPattern("YYYY-MM-DD")))
+
+                append(date.format(DateTimeFormatter.ofPattern("MMM dd")))
             }
         }
 
@@ -74,16 +75,24 @@ fun SlotDialog(
 
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
             items(SlotTime.entries) { slot ->
+                val cur: BookingEntity? = bookingsByDate.find { it.slot == slot }
                 Column {
                     Button(
+
                         onClick = { onSlotSelected(slot) },
+                        enabled = cur == null,
                         shape = RectangleShape,
-                        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.2f)),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        border = BorderStroke(
+                            0.5.dp,
+                            Color.White.copy(alpha = if (cur == null) 0.2f else 0f)
+                        ),
+                        colors = ButtonDefaults.buttonColors(
+                            disabledContainerColor = Color.Transparent,
+                            containerColor = Color.Transparent),
                         modifier = Modifier.fillMaxWidth(),
 
                         ) {
-                        val cur: BookingEntity? = bookingsByDate.find { it.slot == slot }
+
                         if (cur != null) {
                             Text(
                                 "${slot.timeSlot} Reserved by ${cur.witch}",
@@ -117,7 +126,7 @@ fun SlotDialog(
 @Composable
 fun SlotDialogPreview() {
     AppTheme {
-        SlotDialog( LocalDate.now(), listOf(),{}, {})
+        SlotDialog(LocalDate.now(), listOf(), {}, {})
     }
 }
 

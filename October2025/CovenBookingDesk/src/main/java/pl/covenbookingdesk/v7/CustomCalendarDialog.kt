@@ -195,7 +195,8 @@ private fun CalendarMonthsList(
             it.yearMonth == YearMonth.from(selectedDate) 
         }
         if (currentMonthIndex >= 0) {
-            listState.animateScrollToItem(currentMonthIndex)
+            //listState.animateScrollToItem(currentMonthIndex)
+            listState.scrollToItem(currentMonthIndex)
         }
     }
     
