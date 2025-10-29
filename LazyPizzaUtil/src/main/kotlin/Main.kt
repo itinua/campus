@@ -63,7 +63,8 @@ fun parseDb(): List<Product> {
 
 fun main() {
     val products = parseDb()
-    uploadDbForFirebase(products.subList(0, 1))
+    //uploadDbForFirebase(products.subList(0, 1))
+    uploadDbForFirebase(products)
 }
 
 
@@ -98,6 +99,7 @@ fun uploadDbForFirebase(products: List<Product>) {
             .document("${product.category}-${product.name}")
             .set(uploadedImage).get()
 
+        println("Uploaded: $storageReferenceUri")
     }
 
     println("Import Finished")

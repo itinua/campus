@@ -53,7 +53,6 @@ import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_L
 import coil3.compose.AsyncImage
 import coil3.compose.rememberAsyncImagePainter
 import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.initialize
 import com.google.firebase.storage.storage
@@ -167,19 +166,21 @@ class MainActivity : ComponentActivity() {
                     Text("$text")
 
                     var products by remember { mutableStateOf(emptyList<Product>()) }
-                    remember {
-                        var a = Firebase.auth.signInAnonymously()
-                        a.addOnFailureListener {
-                            text = "fail"
-                        }
-                        a.addOnSuccessListener {
-                            text = "success"
 
-                            ProductRepository.getProducts { list ->
-                                products = list
-                                //text = " products: " + list.size
-                            }
-
+//                    remember {
+//                        var a = Firebase.auth.signInAnonymously()
+//                        a.addOnFailureListener {
+//                            text = "fail"
+//                        }
+//                        a.addOnSuccessListener {
+//                            text = "success"
+//
+//
+//                        }
+//                    }
+                    LaunchedEffect(Unit) {
+                        ProductRepository.getProducts { list ->
+                            products = list
                         }
                     }
                     LazyColumn {
