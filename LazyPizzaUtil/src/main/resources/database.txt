@@ -1,0 +1,54 @@
+#Pizza
+
+Margherita — $8.99 — Ingredients: Tomato sauce, mozzarella, fresh basil, olive oil
+Pepperoni — $9.99 — Ingredients: Tomato sauce, mozzarella, pepperoni
+Hawaiian — $10.49 — Ingredients: Tomato sauce, mozzarella, ham, pineapple
+BBQ Chicken — $11.49 — Ingredients: BBQ sauce, mozzarella, grilled chicken, onion, corn
+Four Cheese — $11.99 — Ingredients: Mozzarella, gorgonzola, parmesan, ricotta
+Veggie Delight — $9.79 — Ingredients: Tomato sauce, mozzarella, mushrooms, olives, bell pepper, onion, corn
+Meat Lovers — $12.49 — Ingredients: Tomato sauce, mozzarella, pepperoni, ham, bacon, sausage
+Spicy Inferno — $11.29 — Ingredients: Tomato sauce, mozzarella, spicy salami, jalapeños, red chili pepper, garlic
+Seafood Special — $13.99 — Ingredients: Tomato sauce, mozzarella, shrimp, mussels, squid, parsley
+Truffle Mushroom — $12.99 — Ingredients: Cream sauce, mozzarella, mushrooms, truffle oil, parmesan
+
+
+#Drink
+
+Mineral Water — $1.49
+7-Up — $1.89
+Pepsi — $1.99
+Orange Juice — $2.49
+Apple Juice — $2.29
+Iced Tea (Lemon) — $2.19
+
+#Sauce
+
+Garlic Sauce — $0.59
+BBQ Sauce — $0.59
+Cheese Sauce — $0.89
+Spicy Chili Sauce — $0.59
+
+
+#Ice Cream
+
+Vanilla Ice Cream — $2.49
+Chocolate Ice Cream — $2.49
+Strawberry Ice Cream — $2.49
+Cookies Ice Cream — $2.79
+Pistachio Ice Cream — $2.99
+Mango Sorbet — $2.69
+
+
+#Toppings
+Bacon — $1.00
+Extra Cheese — $1.00
+Corn — $0.50
+Tomato — $0.50
+Olives — $0.50
+Pepperoni — $1.00
+Mushrooms — $0.50
+Basil — $0.50
+Pineapple — $1.00
+Onion — $0.50
+Chili Peppers — $0.50
+Spinach — $0.50

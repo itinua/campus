@@ -11,6 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/LazyPizzaApp" />
+            <option value="$PROJECT_DIR$/LazyPizzaUtil" />
             <option value="$PROJECT_DIR$/October2025" />
             <option value="$PROJECT_DIR$/October2025/CovenBookingDesk" />
             <option value="$PROJECT_DIR$/October2025/CursedCountdown" />
