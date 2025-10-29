@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     
     implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.core:core-splashscreen:1.0.1")
 
     ksp(libs.androidx.room.compiler)
     implementation (libs.androidx.room.runtime)
