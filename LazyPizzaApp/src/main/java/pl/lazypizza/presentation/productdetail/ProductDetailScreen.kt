@@ -1,0 +1,336 @@
+package pl.lazypizza.presentation.productdetail
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
+import pl.lazypizza.domain.model.Topping
+import pl.lazypizza.domain.model.ToppingSelection
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductDetailScreen(
+    productId: String,
+    onBackClick: () -> Unit,
+    onAddToCart: () -> Unit,
+    viewModel: ProductDetailViewModel = koinViewModel(parameters = { parametersOf(productId) })
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { 
+                    Text(
+                        "Product Details",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White
+                )
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(paddingValues)
+                .padding(bottom = 80.dp), // Add padding for the button
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            uiState.product?.let { product ->
+                // Product Image
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        AsyncImage(
+                            model = product.imageUrl,
+                            contentDescription = product.name,
+                            modifier = Modifier
+                                .size(260.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+                
+                // Product Info
+                item {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = product.name,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = product.description,
+                            fontSize = 16.sp,
+                            color = Color.Gray,
+                            lineHeight = 22.sp
+                        )
+                    }
+                }
+                
+                // Toppings Section - Show for Pizza category products
+                item {
+                    // Debug: Show product category and toppings count
+                    println("LazyPizza UI: Product category = ${product.category}, Toppings count = ${uiState.toppings.size}")
+                    
+                    if (product.category.equals("Pizza", ignoreCase = true)) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Text(
+                                text = "ADD EXTRA TOPPINGS",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Gray,
+                                letterSpacing = 1.sp
+                            )
+                            
+                            // Debug: Show toppings count in UI
+                            Text(
+                                text = "(${uiState.toppings.size} toppings available)",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                            
+                            if (uiState.toppings.isNotEmpty()) {
+                                ToppingsGrid(
+                                    toppings = uiState.toppings,
+                                    selectedToppings = uiState.selectedToppings,
+                                    onToppingQuantityChanged = viewModel::updateToppingQuantity
+                                )
+                            } else {
+                                Text(
+                                    text = "No toppings available at the moment",
+                                    fontSize = 14.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(vertical = 16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Bottom Add to Cart Button
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Button(
+            onClick = {
+                viewModel.addToCart()
+                onAddToCart()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF6B35)
+            )
+        ) {
+            Text(
+                text = "Add to Cart for $${String.format("%.2f", uiState.totalPrice)}",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToppingsGrid(
+    toppings: List<Topping>,
+    selectedToppings: Map<String, ToppingSelection>,
+    onToppingQuantityChanged: (Topping, Int) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        // Display toppings in a grid that wraps content
+        val rows = toppings.chunked(3)
+        rows.forEach { rowToppings ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowToppings.forEach { topping ->
+                    ToppingCard(
+                        topping = topping,
+                        selection = selectedToppings[topping.id],
+                        onQuantityChanged = { quantity ->
+                            onToppingQuantityChanged(topping, quantity)
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Add empty spaces if row is not complete
+                repeat(3 - rowToppings.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ToppingCard(
+    topping: Topping,
+    selection: ToppingSelection?,
+    onQuantityChanged: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isSelected = selection != null && selection.quantity > 0
+    val currentQuantity = selection?.quantity ?: 0
+    
+    Card(
+        modifier = modifier
+            .aspectRatio(0.85f),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFFFFE8E0) else Color.White
+        ),
+        border = if (isSelected) 
+            BorderStroke(2.dp, Color(0xFFFF6B35))
+        else 
+            BorderStroke(1.dp, Color.LightGray),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Topping Image
+            AsyncImage(
+                model = topping.imageUrl,
+                contentDescription = topping.name,
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop
+            )
+            
+            // Topping Name
+            Text(
+                text = topping.name,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+            
+            // Price
+            Text(
+                text = "$${String.format("%.2f", topping.price)}",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            // Quantity Selector
+            if (currentQuantity > 0) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { onQuantityChanged(currentQuantity - 1) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = "Decrease",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFFFF6B35)
+                        )
+                    }
+                    
+                    Text(
+                        text = currentQuantity.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    
+                    IconButton(
+                        onClick = { onQuantityChanged(currentQuantity + 1) },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Increase",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFFFF6B35)
+                        )
+                    }
+                }
+            } else {
+                TextButton(
+                    onClick = { onQuantityChanged(1) },
+                    modifier = Modifier.height(32.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add",
+                        modifier = Modifier.size(16.dp),
+                        tint = Color(0xFFFF6B35)
+                    )
+                }
+            }
+        }
+    }
+}

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pl.lazypizza.domain.model.Product
+import pl.lazypizza.domain.model.Topping
 
 class FirebaseProductRepository(
     private val firestore: FirebaseFirestore,
@@ -184,6 +185,27 @@ class FirebaseProductRepository(
                 product.ingredients.any { it.contains(query, ignoreCase = true) }
             }
         } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    override suspend fun getToppings(): List<Topping> {
+        return try {
+            // Get products with category "Toppings" and convert them to Topping objects
+            val toppingProducts = getProductsByCategory("Toppings")
+            
+            toppingProducts.map { product ->
+                Topping(
+                    id = product.id,
+                    name = product.name,
+                    price = product.price,
+                    imageUrl = product.imageUrl,
+                    image = product.image,
+                    available = product.isAvailable
+                )
+            }
+        } catch (e: Exception) {
+            println("LazyPizza: Error getting toppings: ${e.message}")
             emptyList()
         }
     }
