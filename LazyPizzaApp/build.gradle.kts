@@ -57,7 +57,8 @@ dependencies {
 
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
-
+    
+    implementation("androidx.navigation:navigation-compose:2.8.5")
 
     ksp(libs.androidx.room.compiler)
     implementation (libs.androidx.room.runtime)
