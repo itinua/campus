@@ -1,2 +1,4 @@
 /build
 serviceAccountKey.json
+src/main/resources/serviceAccountKey.json
+/.idea
