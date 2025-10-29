@@ -80,7 +80,7 @@ fun uploadDbForFirebase(products: List<Product>) {
     val bucket = StorageClient.getInstance().bucket()
     products.forEach { product ->
         val blobInfo =
-            BlobInfo.newBuilder(bucket.name, "media/${product.category}/${product.name + ".png"}")
+            BlobInfo.newBuilder(bucket.name, "download/${product.category}/${product.name + ".png"}")
                 .setContentType("image/png")
                 .build()
 
@@ -90,7 +90,9 @@ fun uploadDbForFirebase(products: List<Product>) {
         )
         //val downloadUrl =
         //product.imgFile = blob.mediaLink
-        val uploadedImage = product.copy(image = blob.mediaLink)
+
+        val storageReferenceUri = "gs://${blob.bucket}/${blob.name}"
+        val uploadedImage = product.copy(image = storageReferenceUri)
 
         firestore.collection("products")
             .document("${product.category}-${product.name}")

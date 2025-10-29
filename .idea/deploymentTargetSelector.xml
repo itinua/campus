@@ -30,10 +30,10 @@
       </SelectionState>
       <SelectionState runConfigName="LazyPizzaApp">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-10-28T14:47:19.978522Z">
+        <DropdownSelection timestamp="2025-10-29T11:08:11.388961Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/ivanivanenko/.android/avd/Medium_Tablet.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/ivanivanenko/.android/avd/Pixel_9a_16k.avd" />
             </handle>
           </Target>
         </DropdownSelection>
