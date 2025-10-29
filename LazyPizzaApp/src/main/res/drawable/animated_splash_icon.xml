@@ -1,0 +1,272 @@
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="120dp"
+            android:height="120dp"
+            android:viewportWidth="120"
+            android:viewportHeight="120">
+            
+            <!-- Pizza Slice 1 (top) -->
+            <path
+                android:name="slice1"
+                android:pathData="M 60,60 L 60,10 A 50,50 0 0,1 95.36,24.64 Z"
+                android:fillColor="#FCD53F"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 2 -->
+            <path
+                android:name="slice2"
+                android:pathData="M 60,60 L 95.36,24.64 A 50,50 0 0,1 110,60 Z"
+                android:fillColor="#F3AD61"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 3 -->
+            <path
+                android:name="slice3"
+                android:pathData="M 60,60 L 110,60 A 50,50 0 0,1 95.36,95.36 Z"
+                android:fillColor="#FCD53F"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 4 -->
+            <path
+                android:name="slice4"
+                android:pathData="M 60,60 L 95.36,95.36 A 50,50 0 0,1 60,110 Z"
+                android:fillColor="#F3AD61"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 5 -->
+            <path
+                android:name="slice5"
+                android:pathData="M 60,60 L 60,110 A 50,50 0 0,1 24.64,95.36 Z"
+                android:fillColor="#FCD53F"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 6 -->
+            <path
+                android:name="slice6"
+                android:pathData="M 60,60 L 24.64,95.36 A 50,50 0 0,1 10,60 Z"
+                android:fillColor="#F3AD61"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 7 -->
+            <path
+                android:name="slice7"
+                android:pathData="M 60,60 L 10,60 A 50,50 0 0,1 24.64,24.64 Z"
+                android:fillColor="#FCD53F"
+                android:fillAlpha="0"/>
+            
+            <!-- Pizza Slice 8 -->
+            <path
+                android:name="slice8"
+                android:pathData="M 60,60 L 24.64,24.64 A 50,50 0 0,1 60,10 Z"
+                android:fillColor="#F3AD61"
+                android:fillAlpha="0"/>
+            
+            <!-- Center toppings that appear after pizza is complete -->
+            <path
+                android:name="topping1"
+                android:pathData="M 60,30 a 5,5 0 1,0 0,10 a 5,5 0 1,0 0,-10"
+                android:fillColor="#F8312F"
+                android:fillAlpha="0"/>
+            
+            <path
+                android:name="topping2"
+                android:pathData="M 80,45 a 4,4 0 1,0 0,8 a 4,4 0 1,0 0,-8"
+                android:fillColor="#F8312F"
+                android:fillAlpha="0"/>
+            
+            <path
+                android:name="topping3"
+                android:pathData="M 40,50 a 4,4 0 1,0 0,8 a 4,4 0 1,0 0,-8"
+                android:fillColor="#F8312F"
+                android:fillAlpha="0"/>
+            
+            <path
+                android:name="topping4"
+                android:pathData="M 60,70 a 5,5 0 1,0 0,10 a 5,5 0 1,0 0,-10"
+                android:fillColor="#F8312F"
+                android:fillAlpha="0"/>
+            
+            <path
+                android:name="topping5"
+                android:pathData="M 75,65 a 3,3 0 1,0 0,6 a 3,3 0 1,0 0,-6"
+                android:fillColor="#F8312F"
+                android:fillAlpha="0"/>
+            
+            <path
+                android:name="topping6"
+                android:pathData="M 45,75 a 3,3 0 1,0 0,6 a 3,3 0 1,0 0,-6"
+                android:fillColor="#F8312F"
+                android:fillAlpha="0"/>
+        </vector>
+    </aapt:attr>
+    
+    <!-- Slice 1 animation -->
+    <target android:name="slice1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="0"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 2 animation -->
+    <target android:name="slice2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="250"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 3 animation -->
+    <target android:name="slice3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="500"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 4 animation -->
+    <target android:name="slice4">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="750"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 5 animation -->
+    <target android:name="slice5">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="1000"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 6 animation -->
+    <target android:name="slice6">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="1250"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 7 animation -->
+    <target android:name="slice7">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="1500"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Slice 8 animation -->
+    <target android:name="slice8">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="250"
+                android:startOffset="1750"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Topping 1 animation -->
+    <target android:name="topping1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="200"
+                android:startOffset="2000"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Topping 2 animation -->
+    <target android:name="topping2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="200"
+                android:startOffset="2100"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Topping 3 animation -->
+    <target android:name="topping3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="200"
+                android:startOffset="2200"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Topping 4 animation -->
+    <target android:name="topping4">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="200"
+                android:startOffset="2300"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Topping 5 animation -->
+    <target android:name="topping5">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="200"
+                android:startOffset="2100"/>
+        </aapt:attr>
+    </target>
+    
+    <!-- Topping 6 animation -->
+    <target android:name="topping6">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillAlpha"
+                android:valueFrom="0"
+                android:valueTo="1"
+                android:duration="200"
+                android:startOffset="2200"/>
+        </aapt:attr>
+    </target>
+</animated-vector>

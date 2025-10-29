@@ -16,11 +16,20 @@ import pl.lazypizza.presentation.navigation.AppNavigation
 import pl.lazypizza.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
+    private var keepSplashOnScreen = true
+    
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install splash screen before super.onCreate
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         
         super.onCreate(savedInstanceState)
+        
+        // Keep splash screen visible for the animation duration
+        splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
+        
+        // Hide splash screen after animation completes
+        window.decorView.postDelayed({
+            keepSplashOnScreen = false
+        }, 2500L)
         
         // Initialize Firebase
         Firebase.initialize(this)
