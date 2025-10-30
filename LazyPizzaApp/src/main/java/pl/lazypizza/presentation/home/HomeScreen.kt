@@ -1,5 +1,6 @@
 package pl.lazypizza.presentation.home
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -37,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,40 +63,42 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(300.dp),
+        contentPadding = PaddingValues(top = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+
+
     ) {
-        item {
+        stickyHeader {
             HeaderSection()
         }
-
-        item {
+        stickyHeader {
             HeroBanner()
         }
 
-        item {
-            SearchBar(
-                query = uiState.searchQuery,
-                onQueryChange = viewModel::updateSearchQuery
-            )
-        }
 
-        item {
-            CategoryTabs(
-                selectedCategory = uiState.selectedCategory,
-                onCategorySelected = viewModel::selectCategory
-            )
-        }
 
-        item {
-            CategoryHeader(uiState.selectedCategory)
+        stickyHeader {
+            Column(Modifier.background(MaterialTheme.colorScheme.background)) {
+                SearchBar(
+                    query = uiState.searchQuery,
+                    onQueryChange = viewModel::updateSearchQuery
+                )
+                CategoryTabs(
+                    selectedCategory = uiState.selectedCategory,
+                    onCategorySelected = viewModel::selectCategory
+                )
+
+                //CategoryHeader(uiState.selectedCategory)
+            }
         }
 
         items(
-            items = uiState.filteredProducts,
+            uiState.filteredProducts,
             key = { it.name }
+
         ) { product ->
             ProductCard(
                 product = product,
@@ -100,7 +106,51 @@ fun HomeScreen(
                 onAddToCart = { viewModel.addToCart(product) }
             )
         }
+
     }
+    if (false)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFF8F8F8))
+        ) {
+            item {
+                HeaderSection()
+            }
+
+            item {
+                HeroBanner()
+            }
+
+            item {
+                SearchBar(
+                    query = uiState.searchQuery,
+                    onQueryChange = viewModel::updateSearchQuery
+                )
+            }
+
+            item {
+                CategoryTabs(
+                    selectedCategory = uiState.selectedCategory,
+                    onCategorySelected = viewModel::selectCategory
+                )
+            }
+
+            item {
+                CategoryHeader(uiState.selectedCategory)
+            }
+
+            items(
+                items = uiState.filteredProducts,
+                key = { it.name }
+            ) { product ->
+                ProductCard(
+                    product = product,
+                    onClick = { onProductClick(product) },
+                    onAddToCart = { viewModel.addToCart(product) }
+                )
+            }
+        }
 }
 
 @Composable
@@ -267,6 +317,7 @@ private fun CategoryHeader(category: ProductCategory?) {
     )
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 private fun ProductCard(
     product: Product,
@@ -288,8 +339,6 @@ private fun ProductCard(
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            val context = LocalContext.current
-
 
             AsyncImage(
                 model = product.image,
