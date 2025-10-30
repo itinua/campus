@@ -20,16 +20,18 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+
+
         
         super.onCreate(savedInstanceState)
         
         // Keep splash screen visible for the animation duration
-        splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
+      //  splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
         
         // Hide splash screen after animation completes
-        window.decorView.postDelayed({
-            keepSplashOnScreen = false
-        }, 2500L)
+//        window.decorView.postDelayed({
+//            keepSplashOnScreen = false
+//        }, 500L)
         
         // Initialize Firebase
         Firebase.initialize(this)

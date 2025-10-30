@@ -1,9 +1,9 @@
 package pl.lazypizza.presentation.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,12 +37,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import okhttp3.Headers
+import okhttp3.Interceptor
+import okhttp3.Response
 import org.koin.compose.viewmodel.koinViewModel
+import pl.lazypizza.R
 import pl.lazypizza.domain.model.Product
 import pl.lazypizza.domain.model.ProductCategory
 
@@ -52,7 +58,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -61,29 +67,29 @@ fun HomeScreen(
         item {
             HeaderSection()
         }
-        
+
         item {
             HeroBanner()
         }
-        
+
         item {
             SearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = viewModel::updateSearchQuery
             )
         }
-        
+
         item {
             CategoryTabs(
                 selectedCategory = uiState.selectedCategory,
                 onCategorySelected = viewModel::selectCategory
             )
         }
-        
+
         item {
             CategoryHeader(uiState.selectedCategory)
         }
-        
+
         items(
             items = uiState.filteredProducts,
             key = { it.id }
@@ -121,7 +127,7 @@ private fun HeaderSection() {
                 fontWeight = FontWeight.SemiBold
             )
         }
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -143,36 +149,19 @@ private fun HeaderSection() {
 
 @Composable
 private fun HeroBanner() {
-    Card(
+
+    Image(
+        painter = painterResource(R.drawable.banner),
+        contentDescription = "Delicious Pizza Banner",
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Box {
-            // Background color matching the orange theme
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF57C00))
-            )
-            
-            // Pizza banner image
-            // Upload the provided image to Firebase Storage at: gs://lazzypizza-45597.firebasestorage.app/o/banner_pizza.jpg
-            // Or use a direct URL if available
-            AsyncImage(
-                model = "gs://lazzypizza-45597.firebasestorage.app/o/banner_pizza.jpg",
-                contentDescription = "Delicious Pizza Banner",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(16.dp)),
-                contentScale = ContentScale.Crop
-            )
-        }
-    }
+            .height(120.dp)
+            .padding(8.dp)
+            .clip(RoundedCornerShape(16.dp)),
+        contentScale = ContentScale.Crop
+    )
+
+
 }
 
 @Composable
@@ -298,15 +287,18 @@ private fun ProductCard(
                 .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            val context = LocalContext.current
+
+
             AsyncImage(
-                model = product.imageUrl,
+                model = product.image,
                 contentDescription = product.name,
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape),
                 contentScale = ContentScale.Crop
             )
-            
+
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -320,7 +312,7 @@ private fun ProductCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Text(
                     text = product.description,
                     fontSize = 13.sp,
@@ -328,9 +320,9 @@ private fun ProductCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = "$${String.format("%.2f", product.price)}",
                     fontSize = 18.sp,
@@ -338,5 +330,24 @@ private fun ProductCard(
                 )
             }
         }
+    }
+}
+
+class RequestHeaderInterceptor(
+    private val name: String,
+    private val value: String,
+) : Interceptor {
+
+    override fun intercept(chain: Interceptor.Chain): Response {
+        var url = chain.request().url
+        println("intercept: $url")
+        val headers = Headers.Builder()
+            .set("Cache-Control", "no-cache")
+            .build()
+        val request = chain.request()
+            .newBuilder()
+            //.headers(headers)
+            .build()
+        return chain.proceed(request)
     }
 }

@@ -22,42 +22,17 @@ class FirebaseProductRepository(
                     close(error)
                     return@addSnapshotListener
                 }
-                
+
                 if (snapshot != null) {
                     launch {
                         val products = snapshot.documents.mapNotNull { doc ->
-                            val product = doc.toObject(Product::class.java)?.copy(id = doc.id)
-                            product?.let {
-                                // Convert Firebase Storage reference URL to download URL
-                                val imageUrl = when {
-                                    it.image.startsWith("gs://") -> {
-                                        try {
-                                            storage.getReferenceFromUrl(it.image)
-                                                .downloadUrl.await().toString()
-                                        } catch (e: Exception) {
-                                            it.image
-                                        }
-                                    }
-                                    it.imageUrl.startsWith("gs://") -> {
-                                        try {
-                                            storage.getReferenceFromUrl(it.imageUrl)
-                                                .downloadUrl.await().toString()
-                                        } catch (e: Exception) {
-                                            it.imageUrl
-                                        }
-                                    }
-                                    it.imageUrl.isNotEmpty() -> it.imageUrl
-                                    it.image.isNotEmpty() -> it.image
-                                    else -> ""
-                                }
-                                it.copy(imageUrl = imageUrl)
-                            }
+                            doc.toObject(Product::class.java)?.copy(id = doc.id)
                         }
                         trySend(products)
                     }
                 }
             }
-        
+
         awaitClose { subscription.remove() }
     }
 
@@ -67,33 +42,8 @@ class FirebaseProductRepository(
                 .document(id)
                 .get()
                 .await()
-            
-            val product = document.toObject(Product::class.java)?.copy(id = document.id)
-            product?.let {
-                // Convert Firebase Storage reference URL to download URL
-                val imageUrl = when {
-                    it.image.startsWith("gs://") -> {
-                        try {
-                            storage.getReferenceFromUrl(it.image)
-                                .downloadUrl.await().toString()
-                        } catch (e: Exception) {
-                            it.image
-                        }
-                    }
-                    it.imageUrl.startsWith("gs://") -> {
-                        try {
-                            storage.getReferenceFromUrl(it.imageUrl)
-                                .downloadUrl.await().toString()
-                        } catch (e: Exception) {
-                            it.imageUrl
-                        }
-                    }
-                    it.imageUrl.isNotEmpty() -> it.imageUrl
-                    it.image.isNotEmpty() -> it.image
-                    else -> ""
-                }
-                it.copy(imageUrl = imageUrl)
-            }
+
+            document.toObject(Product::class.java)?.copy(id = document.id)
         } catch (e: Exception) {
             null
         }
@@ -105,36 +55,8 @@ class FirebaseProductRepository(
                 .whereEqualTo("category", category)
                 .get()
                 .await()
-            
+
             val products = mutableListOf<Product>()
-            for (doc in snapshot.documents) {
-                val product = doc.toObject(Product::class.java)?.copy(id = doc.id)
-                product?.let {
-                    // Convert Firebase Storage reference URL to download URL
-                    val imageUrl = when {
-                        it.image.startsWith("gs://") -> {
-                            try {
-                                storage.getReferenceFromUrl(it.image)
-                                    .downloadUrl.await().toString()
-                            } catch (e: Exception) {
-                                it.image
-                            }
-                        }
-                        it.imageUrl.startsWith("gs://") -> {
-                            try {
-                                storage.getReferenceFromUrl(it.imageUrl)
-                                    .downloadUrl.await().toString()
-                            } catch (e: Exception) {
-                                it.imageUrl
-                            }
-                        }
-                        it.imageUrl.isNotEmpty() -> it.imageUrl
-                        it.image.isNotEmpty() -> it.image
-                        else -> ""
-                    }
-                    products.add(it.copy(imageUrl = imageUrl))
-                }
-            }
             products.filter { it.category.equals(category, ignoreCase = true) }
         } catch (e: Exception) {
             emptyList()
@@ -151,49 +73,27 @@ class FirebaseProductRepository(
                     for (doc in docs) {
                         val product = doc.toObject(Product::class.java)?.copy(id = doc.id)
                         product?.let {
-                            // Convert Firebase Storage reference URL to download URL
-                            val imageUrl = when {
-                                it.image.startsWith("gs://") -> {
-                                    try {
-                                        storage.getReferenceFromUrl(it.image)
-                                            .downloadUrl.await().toString()
-                                    } catch (e: Exception) {
-                                        it.image
-                                    }
-                                }
-                                it.imageUrl.startsWith("gs://") -> {
-                                    try {
-                                        storage.getReferenceFromUrl(it.imageUrl)
-                                            .downloadUrl.await().toString()
-                                    } catch (e: Exception) {
-                                        it.imageUrl
-                                    }
-                                }
-                                it.imageUrl.isNotEmpty() -> it.imageUrl
-                                it.image.isNotEmpty() -> it.image
-                                else -> ""
-                            }
-                            products.add(it.copy(imageUrl = imageUrl))
+                            products.add(product)
                         }
                     }
                     products
                 }
-            
+
             allProducts.filter { product ->
                 product.name.contains(query, ignoreCase = true) ||
-                product.description.contains(query, ignoreCase = true) ||
-                product.ingredients.any { it.contains(query, ignoreCase = true) }
+                        product.description.contains(query, ignoreCase = true) ||
+                        product.ingredients.any { it.contains(query, ignoreCase = true) }
             }
         } catch (e: Exception) {
             emptyList()
         }
     }
-    
+
     override suspend fun getToppings(): List<Topping> {
         return try {
             // Get products with category "Toppings" and convert them to Topping objects
             val toppingProducts = getProductsByCategory("Toppings")
-            
+
             toppingProducts.map { product ->
                 Topping(
                     id = product.id,

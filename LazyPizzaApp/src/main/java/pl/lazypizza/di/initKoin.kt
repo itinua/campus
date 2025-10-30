@@ -3,8 +3,8 @@ package pl.lazypizza.di
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
-import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 import pl.lazypizza.data.repository.CartRepository
@@ -26,9 +26,9 @@ val repositoryModule = module {
 }
 
 val viewModelModule = module {
-    viewModel { HomeViewModel(get(), get()) }
-    viewModel { CartViewModel(get()) }
-    viewModel { parameters -> ProductDetailViewModel(parameters.get(), get(), get()) }
+    viewModelOf(::HomeViewModel)
+    viewModelOf(::CartViewModel)
+    viewModelOf(::ProductDetailViewModel)
 }
 
 val networkModule = module {
