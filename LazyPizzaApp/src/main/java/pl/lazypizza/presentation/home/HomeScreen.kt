@@ -1,6 +1,7 @@
 package pl.lazypizza.presentation.home
 
 import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -70,7 +73,7 @@ fun HomeScreen(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
 
 
-    ) {
+        ) {
         stickyHeader {
             HeaderSection()
         }
@@ -373,11 +376,30 @@ private fun ProductCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = "$${String.format("%.2f", product.price)}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                Row {
+                    Text(
+                        text = "$${String.format("%.2f", product.price)}",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (product.category != ProductCategory.PIZZA) {
+                        Button(
+                            onClick = {},
+                            border = BorderStroke(1.dp, Color(0xFFE6E7ED).copy(alpha = 0.5f)),
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = Color.Transparent,
+                                containerColor = Color.Transparent,
+                            )
+                        ) {
+                            Text(
+                                "Add to Cart",
+                                color = Color(0xFFF36B50),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
             }
         }
     }

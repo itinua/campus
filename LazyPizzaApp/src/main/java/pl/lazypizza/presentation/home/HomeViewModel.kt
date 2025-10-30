@@ -98,8 +98,8 @@ class HomeViewModel(
             .filter { product ->
                 (product.category == category) &&
                         (searchQuery.isEmpty() ||
-                                product.name.contains(searchQuery, ignoreCase = true) ||
-                                product.description.contains(searchQuery, ignoreCase = true))
+                        product.name.contains(searchQuery, ignoreCase = true) ||
+                        product.description.contains(searchQuery, ignoreCase = true))
             }
     }
 }
