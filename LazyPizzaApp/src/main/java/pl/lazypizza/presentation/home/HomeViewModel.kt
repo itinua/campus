@@ -15,7 +15,7 @@ import pl.lazypizza.domain.model.ProductCategory
 data class HomeUiState(
     val products: List<Product> = emptyList(),
     val filteredProducts: List<Product> = emptyList(),
-    val selectedCategory: ProductCategory? = null,
+    val selectedCategory: ProductCategory = ProductCategory.PIZZA,
     val searchQuery: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -26,7 +26,7 @@ class HomeViewModel(
     private val productRepository: ProductRepository,
     private val cartRepository: CartRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -38,15 +38,22 @@ class HomeViewModel(
     private fun loadProducts() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            
+
             productRepository.getProducts().collect { products ->
+
                 _uiState.update { state ->
-                    state.copy(
-                        products = products,
-                        filteredProducts = filterProducts(products, state.selectedCategory, state.searchQuery),
-                        isLoading = false,
-                        error = null
-                    )
+
+                    state
+                        .copy(
+                            products = products,
+                            filteredProducts = filterProducts(
+                                products,
+                                state.selectedCategory,
+                                state.searchQuery
+                            ),
+                            isLoading = false,
+                            error = null
+                        )
                 }
             }
         }
@@ -60,7 +67,7 @@ class HomeViewModel(
         }
     }
 
-    fun selectCategory(category: ProductCategory?) {
+    fun selectCategory(category: ProductCategory) {
         _uiState.update { state ->
             state.copy(
                 selectedCategory = category,
@@ -84,15 +91,15 @@ class HomeViewModel(
 
     private fun filterProducts(
         products: List<Product>,
-        category: ProductCategory?,
+        category: ProductCategory,
         searchQuery: String
     ): List<Product> {
         return products
             .filter { product ->
-                (category == null || product.getCategoryEnum() == category) &&
-                (searchQuery.isEmpty() ||
-                 product.name.contains(searchQuery, ignoreCase = true) ||
-                 product.description.contains(searchQuery, ignoreCase = true))
+                (product.category == category) &&
+                        (searchQuery.isEmpty() ||
+                                product.name.contains(searchQuery, ignoreCase = true) ||
+                                product.description.contains(searchQuery, ignoreCase = true))
             }
     }
 }

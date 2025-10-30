@@ -92,9 +92,9 @@ class ProductDetailViewModel(
         _uiState.update { state ->
             val updatedToppings = state.selectedToppings.toMutableMap()
             if (quantity <= 0) {
-                updatedToppings.remove(topping.id)
+                updatedToppings.remove(topping.name)
             } else {
-                updatedToppings[topping.id] = ToppingSelection(topping, quantity)
+                updatedToppings[topping.name] = ToppingSelection(topping, quantity)
             }
             state.copy(selectedToppings = updatedToppings)
         }

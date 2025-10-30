@@ -1,6 +1,5 @@
 package pl.lazypizza.data.repository
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,10 +22,10 @@ class InMemoryCartRepository : CartRepository {
 
     override fun addToCart(product: Product) {
         _cart.update { currentCart ->
-            val existingItem = currentCart.items.find { it.product.id == product.id }
+            val existingItem = currentCart.items.find { it.product.name == product.name }
             val updatedItems = if (existingItem != null) {
                 currentCart.items.map { item ->
-                    if (item.product.id == product.id) {
+                    if (item.product.name == product.name) {
                         item.copy(quantity = item.quantity + 1)
                     } else item
                 }
@@ -40,7 +39,7 @@ class InMemoryCartRepository : CartRepository {
 
     override fun removeFromCart(product: Product) {
         _cart.update { currentCart ->
-            val updatedItems = currentCart.items.filter { it.product.id != product.id }
+            val updatedItems = currentCart.items.filter { it.product.name != product.name }
             calculateCart(updatedItems)
         }
     }
@@ -48,10 +47,10 @@ class InMemoryCartRepository : CartRepository {
     override fun updateQuantity(product: Product, quantity: Int) {
         _cart.update { currentCart ->
             val updatedItems = if (quantity <= 0) {
-                currentCart.items.filter { it.product.id != product.id }
+                currentCart.items.filter { it.product.name != product.name }
             } else {
                 currentCart.items.map { item ->
-                    if (item.product.id == product.id) {
+                    if (item.product.name == product.name) {
                         item.copy(quantity = quantity)
                     } else item
                 }

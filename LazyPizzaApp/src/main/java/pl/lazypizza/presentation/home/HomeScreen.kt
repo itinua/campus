@@ -92,7 +92,7 @@ fun HomeScreen(
 
         items(
             items = uiState.filteredProducts,
-            key = { it.id }
+            key = { it.name }
         ) { product ->
             ProductCard(
                 product = product,
@@ -199,8 +199,8 @@ private fun SearchBar(
 
 @Composable
 private fun CategoryTabs(
-    selectedCategory: ProductCategory?,
-    onCategorySelected: (ProductCategory?) -> Unit
+    selectedCategory: ProductCategory,
+    onCategorySelected: (ProductCategory) -> Unit
 ) {
     LazyRow(
         modifier = Modifier
@@ -209,13 +209,14 @@ private fun CategoryTabs(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        items(ProductCategory.values()) { category ->
+        val categories = ProductCategory.entries.filter { it != ProductCategory.NONE }
+        items(categories) { category ->
             CategoryChip(
                 category = category,
                 isSelected = selectedCategory == category,
                 onClick = {
                     onCategorySelected(
-                        if (selectedCategory == category) null else category
+                        category
                     )
                 }
             )

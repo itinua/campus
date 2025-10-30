@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pl.lazypizza.domain.model.Product
+import pl.lazypizza.domain.model.ProductCategory
 import pl.lazypizza.domain.model.Topping
 
 class FirebaseProductRepository(
@@ -26,7 +27,7 @@ class FirebaseProductRepository(
                 if (snapshot != null) {
                     launch {
                         val products = snapshot.documents.mapNotNull { doc ->
-                            doc.toObject(Product::class.java)?.copy(id = doc.id)
+                            doc.toObject(Product::class.java)
                         }
                         trySend(products)
                     }
@@ -43,13 +44,13 @@ class FirebaseProductRepository(
                 .get()
                 .await()
 
-            document.toObject(Product::class.java)?.copy(id = document.id)
+            document.toObject(Product::class.java)
         } catch (e: Exception) {
             null
         }
     }
 
-    override suspend fun getProductsByCategory(category: String): List<Product> {
+    override suspend fun getProductsByCategory(category: ProductCategory): List<Product> {
         return try {
             val snapshot = firestore.collection(PRODUCTS_COLLECTION)
                 .whereEqualTo("category", category)
@@ -57,7 +58,7 @@ class FirebaseProductRepository(
                 .await()
 
             val products = mutableListOf<Product>()
-            products.filter { it.category.equals(category, ignoreCase = true) }
+            products.filter { it.category == category }
         } catch (e: Exception) {
             emptyList()
         }
@@ -71,7 +72,7 @@ class FirebaseProductRepository(
                 .documents.let { docs ->
                     val products = mutableListOf<Product>()
                     for (doc in docs) {
-                        val product = doc.toObject(Product::class.java)?.copy(id = doc.id)
+                        val product = doc.toObject(Product::class.java)
                         product?.let {
                             products.add(product)
                         }
@@ -81,9 +82,9 @@ class FirebaseProductRepository(
 
             allProducts.filter { product ->
                 product.name.contains(query, ignoreCase = true) ||
-                        product.description.contains(query, ignoreCase = true) ||
-                        product.ingredients.any { it.contains(query, ignoreCase = true) }
+                        product.description.contains(query, ignoreCase = true)
             }
+
         } catch (e: Exception) {
             emptyList()
         }
@@ -92,16 +93,13 @@ class FirebaseProductRepository(
     override suspend fun getToppings(): List<Topping> {
         return try {
             // Get products with category "Toppings" and convert them to Topping objects
-            val toppingProducts = getProductsByCategory("Toppings")
+            val toppingProducts = getProductsByCategory(ProductCategory.DRINKS)
 
             toppingProducts.map { product ->
                 Topping(
-                    id = product.id,
                     name = product.name,
                     price = product.price,
-                    imageUrl = product.imageUrl,
-                    image = product.image,
-                    available = product.isAvailable
+                    imageUrl = product.image,
                 )
             }
         } catch (e: Exception) {

@@ -33,14 +33,14 @@ class CartViewModel(
         )
 
     fun increaseQuantity(product: Product) {
-        val currentItem = uiState.value.cart.items.find { it.product.id == product.id }
+        val currentItem = uiState.value.cart.items.find { it.product.name == product.name }
         currentItem?.let {
             cartRepository.updateQuantity(product, it.quantity + 1)
         }
     }
 
     fun decreaseQuantity(product: Product) {
-        val currentItem = uiState.value.cart.items.find { it.product.id == product.id }
+        val currentItem = uiState.value.cart.items.find { it.product.name == product.name }
         currentItem?.let {
             if (it.quantity > 1) {
                 cartRepository.updateQuantity(product, it.quantity - 1)

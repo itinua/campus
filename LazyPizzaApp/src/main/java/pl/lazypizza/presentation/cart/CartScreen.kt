@@ -69,7 +69,7 @@ fun CartScreen(
             ) {
                 items(
                     items = uiState.cart.items,
-                    key = { it.product.id }
+                    key = { it.product.name }
                 ) { cartItem ->
                     CartItemCard(
                         cartItem = cartItem,
@@ -155,7 +155,7 @@ private fun CartItemCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = cartItem.product.imageUrl,
+                model = cartItem.product.image,
                 contentDescription = cartItem.product.name,
                 modifier = Modifier
                     .size(80.dp)
