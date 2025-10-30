@@ -43,9 +43,9 @@ enum class AppDestinations(
     val label: String,
     val icon: ImageVector,
 ) {
-    HOME("Menu", Icons.Filled.MenuBook),
-    FAVORITES("Cart", Icons.Filled.ShoppingCart),
-    PROFILE("History", Icons.Filled.History),
+    MENU("Menu", Icons.Filled.MenuBook),
+    CART("Cart", Icons.Filled.ShoppingCart),
+    HISTORY("History", Icons.Filled.History),
 }
 
 
@@ -63,7 +63,7 @@ fun AppNavigation(
         currentRoute.startsWith("product_detail/") -> false
         else -> true
     }
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.MENU) }
 
 
     val myNavigationSuiteItemColors = NavigationSuiteDefaults.itemColors(
@@ -95,7 +95,16 @@ fun AppNavigation(
                     },
                     label = { Text(it.label) },
                     selected = it == currentDestination,
-                    onClick = { currentDestination = it },
+                    onClick = {
+                            currentDestination = it;
+                        when(it) {
+                            AppDestinations.MENU -> navController.navigate(BottomNavItem.Menu.route)
+                            AppDestinations.CART -> navController.navigate(BottomNavItem.Cart.route)
+                            AppDestinations.HISTORY -> navController.navigate(BottomNavItem.History.route)
+                        }
+
+
+                              },
                     colors = myNavigationSuiteItemColors,
                 )
             }
