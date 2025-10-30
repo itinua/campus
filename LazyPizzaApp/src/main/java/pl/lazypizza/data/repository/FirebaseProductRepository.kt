@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import pl.lazypizza.domain.model.Product
 import pl.lazypizza.domain.model.ProductCategory
-import pl.lazypizza.domain.model.Topping
 
 class FirebaseProductRepository(
     private val firestore: FirebaseFirestore,
@@ -28,6 +27,7 @@ class FirebaseProductRepository(
                     launch {
                         val products = snapshot.documents.mapNotNull { doc ->
                             doc.toObject(Product::class.java)
+                                ?.copy(id = doc.id)
                         }
                         trySend(products)
                     }
@@ -53,12 +53,19 @@ class FirebaseProductRepository(
     override suspend fun getProductsByCategory(category: ProductCategory): List<Product> {
         return try {
             val snapshot = firestore.collection(PRODUCTS_COLLECTION)
-                .whereEqualTo("category", category)
+                .whereEqualTo("category", category.firebaseValue)
                 .get()
                 .await()
 
-            val products = mutableListOf<Product>()
-            products.filter { it.category == category }
+            println("getProductsByCategory ${snapshot.size()}")
+
+            return snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Product::class.java)
+                    ?.copy(id = doc.id)
+            }
+
+            //val products = mutableListOf<Product>()
+            //products.filter { it.category == category }
         } catch (e: Exception) {
             emptyList()
         }
@@ -90,30 +97,8 @@ class FirebaseProductRepository(
         }
     }
 
-    override suspend fun getToppings(): List<Topping> {
-        return try {
-            // Get products with category "Toppings" and convert them to Topping objects
-            val toppingProducts = getProductsByCategory(ProductCategory.DRINKS)
-
-            toppingProducts.map { product ->
-                Topping(
-                    name = product.name,
-                    price = product.price,
-                    imageUrl = product.image,
-                )
-            }
-        } catch (e: Exception) {
-            println("LazyPizza: Error getting toppings: ${e.message}")
-            emptyList()
-        }
-    }
-
-    suspend fun getImageUrl(storageUrl: String): String {
-        return try {
-            storage.getReferenceFromUrl(storageUrl).downloadUrl.await().toString()
-        } catch (e: Exception) {
-            ""
-        }
+    override suspend fun getToppings(): List<Product> {
+        return getProductsByCategory(ProductCategory.TOPPINGS)
     }
 
     companion object {

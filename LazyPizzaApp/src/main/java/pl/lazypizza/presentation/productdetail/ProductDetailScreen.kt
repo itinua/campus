@@ -1,6 +1,5 @@
 package pl.lazypizza.presentation.productdetail
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,15 +23,16 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,12 +45,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
 import coil3.compose.AsyncImage
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import pl.lazypizza.domain.model.ProductCategory
-import pl.lazypizza.domain.model.Topping
-import pl.lazypizza.domain.model.ToppingSelection
+import pl.lazypizza.domain.model.Product
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,11 +60,13 @@ fun ProductDetailScreen(
     viewModel: ProductDetailViewModel = koinViewModel(parameters = { parametersOf(productId) })
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+    val toppings = uiState.toppings
+
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         "Product Details",
                         fontSize = 18.sp,
@@ -86,102 +87,163 @@ fun ProductDetailScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(paddingValues)
-                .padding(bottom = 80.dp), // Add padding for the button
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            uiState.product?.let { product ->
-                // Product Image
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(280.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AsyncImage(
-                            model = product.image,
-                            contentDescription = product.name,
-                            modifier = Modifier
-                                .size(260.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
+        uiState.product?.let { product ->
+
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues)
+            ) {
+                val adaptiveInfo = currentWindowAdaptiveInfo()
+                if (adaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+                        WIDTH_DP_EXPANDED_LOWER_BOUND
+                    )
+                ) {
+                    HorizontalLayout(product, viewModel, toppings)
+                } else {
+                    VerticalLayout(product, viewModel, toppings)
                 }
-                
-                // Product Info
+            }
+
+
+        }
+    }
+}
+
+@Composable
+fun HorizontalLayout(product: Product, viewModel: ProductDetailViewModel, toppings: List<Product>) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        LazyColumn(Modifier.weight(1f)) {
+            stickyHeader {
+                ProductName(product)
+                AddToCart(
+                    viewModel, Modifier.background(MaterialTheme.colorScheme.background),
+                    onAddToCart = { })
+            }
+            item {
+                ProductImage(product)
+
+                ProductDescription(product)
+            }
+
+
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            LazyColumn {
                 item {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = product.name,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = product.description,
-                            fontSize = 16.sp,
-                            color = Color.Gray,
-                            lineHeight = 22.sp
-                        )
-                    }
+                    AllToppings(toppings)
                 }
-                
-                // Toppings Section - Show for Pizza category products
-                item {
-                    // Debug: Show product category and toppings count
-                    println("LazyPizza UI: Product category = ${product.category}, Toppings count = ${uiState.toppings.size}")
-                    
-                    if (product.category == ProductCategory.PIZZA) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(
-                                text = "ADD EXTRA TOPPINGS",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Gray,
-                                letterSpacing = 1.sp
-                            )
-                            
-                            // Debug: Show toppings count in UI
-                            Text(
-                                text = "(${uiState.toppings.size} toppings available)",
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                            
-                            if (uiState.toppings.isNotEmpty()) {
-                                ToppingsGrid(
-                                    toppings = uiState.toppings,
-                                    selectedToppings = uiState.selectedToppings,
-                                    onToppingQuantityChanged = viewModel::updateToppingQuantity
-                                )
-                            } else {
-                                Text(
-                                    text = "No toppings available at the moment",
-                                    fontSize = 14.sp,
-                                    color = Color.Gray,
-                                    modifier = Modifier.padding(vertical = 16.dp)
-                                )
-                            }
-                        }
-                    }
-                }
+
             }
         }
     }
-    
-    // Bottom Add to Cart Button
+}
+
+
+@Composable
+fun VerticalLayout(product: Product, viewModel: ProductDetailViewModel, toppings: List<Product>) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(bottom = 80.dp),
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        item {
+            ProductImage(product)
+        }
+        stickyHeader {
+            ProductName(product)
+        }
+        item {
+            ProductDescription(product)
+        }
+        item {
+            AllToppings(toppings)
+
+        }
+    }
+
+    AddToCart(viewModel, Modifier, onAddToCart = { })
+}
+
+
+@Composable
+private fun ProductDescription(product: Product) {
+    Text(
+        text = product.description,
+        fontSize = 16.sp,
+        color = Color.Gray,
+        lineHeight = 22.sp
+    )
+}
+
+@Composable
+private fun ProductName(product: Product) {
+    Text(
+        text = product.name,
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.background),
+        fontSize = 28.sp,
+        fontWeight = FontWeight.Bold
+    )
+}
+
+@Composable
+private fun ProductImage(product: Product) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(280.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        AsyncImage(
+            model = product.image,
+            contentDescription = product.name,
+            modifier = Modifier
+                .size(260.dp)
+                .clip(CircleShape),
+            contentScale = ContentScale.Crop
+        )
+    }
+}
+
+
+@Composable
+fun AllToppings(toppings: List<Product>) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "ADD EXTRA TOPPINGS",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Gray,
+            letterSpacing = 1.sp
+        )
+        if (toppings.isNotEmpty()) {
+            ToppingsGrid(
+                toppings = toppings,
+                selectedToppings = emptyMap(),
+                onToppingQuantityChanged = { _, _ -> }
+            )
+        } else {
+            Text(
+                text = "No toppings available at the moment",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AddToCart(viewModel: ProductDetailViewModel, modifier: Modifier, onAddToCart: () -> Unit) {
+    Box(
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
         Button(
@@ -199,7 +261,7 @@ fun ProductDetailScreen(
             )
         ) {
             Text(
-                text = "Add to Cart for $${String.format("%.2f", uiState.totalPrice)}",
+                text = "Add to Cart",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
@@ -209,9 +271,9 @@ fun ProductDetailScreen(
 
 @Composable
 private fun ToppingsGrid(
-    toppings: List<Topping>,
-    selectedToppings: Map<String, ToppingSelection>,
-    onToppingQuantityChanged: (Topping, Int) -> Unit
+    toppings: List<Product>,
+    selectedToppings: Map<String, Product>,
+    onToppingQuantityChanged: (Product, Int) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -228,7 +290,7 @@ private fun ToppingsGrid(
                 rowToppings.forEach { topping ->
                     ToppingCard(
                         topping = topping,
-                        selection = selectedToppings[topping.name],
+                        //selection = selectedToppings[topping.name],
                         onQuantityChanged = { quantity ->
                             onToppingQuantityChanged(topping, quantity)
                         },
@@ -246,27 +308,28 @@ private fun ToppingsGrid(
 
 @Composable
 private fun ToppingCard(
-    topping: Topping,
-    selection: ToppingSelection?,
+    topping: Product,
     onQuantityChanged: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isSelected = selection != null && selection.quantity > 0
-    val currentQuantity = selection?.quantity ?: 0
-    
+//    val isSelected = selection != null && selection.quantity > 0
+//    val currentQuantity = selection?.quantity ?: 0
+
     Card(
         modifier = modifier
             .aspectRatio(0.85f),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFFFFE8E0) else Color.White
-        ),
-        border = if (isSelected) 
-            BorderStroke(2.dp, Color(0xFFFF6B35))
-        else 
-            BorderStroke(1.dp, Color.LightGray),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
+        //colors = CardDefaults.cardColors(
+        //ontainerColor = if (isSelected) Color(0xFFFFE8E0) else Color.White
+        //   ),
+        //border = if (isSelected)
+        //  BorderStroke(2.dp, Color(0xFFFF6B35))
+        //else
+        //     BorderStroke(1.dp, Color.LightGray),
+        //elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    )
+    {
+        val currentQuantity = 0
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -276,14 +339,14 @@ private fun ToppingCard(
         ) {
             // Topping Image
             AsyncImage(
-                model = topping.imageUrl,
+                model = topping.image,
                 contentDescription = topping.name,
                 modifier = Modifier
                     .size(50.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
-            
+
             // Topping Name
             Text(
                 text = topping.name,
@@ -292,14 +355,14 @@ private fun ToppingCard(
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
-            
+
             // Price
             Text(
                 text = "$${String.format("%.2f", topping.price)}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
-            
+
             // Quantity Selector
             if (currentQuantity > 0) {
                 Row(
@@ -318,13 +381,13 @@ private fun ToppingCard(
                             tint = Color(0xFFFF6B35)
                         )
                     }
-                    
+
                     Text(
                         text = currentQuantity.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    
+
                     IconButton(
                         onClick = { onQuantityChanged(currentQuantity + 1) },
                         modifier = Modifier.size(24.dp)

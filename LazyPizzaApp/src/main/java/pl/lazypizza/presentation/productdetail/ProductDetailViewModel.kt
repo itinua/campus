@@ -10,25 +10,23 @@ import kotlinx.coroutines.launch
 import pl.lazypizza.data.repository.CartRepository
 import pl.lazypizza.data.repository.ProductRepository
 import pl.lazypizza.domain.model.Product
-import pl.lazypizza.domain.model.Topping
-import pl.lazypizza.domain.model.ToppingSelection
+import pl.lazypizza.domain.model.ProductCategory
 
 data class ProductDetailUiState(
     val product: Product? = null,
     val quantity: Int = 1,
-    val toppings: List<Topping> = emptyList(),
-    val selectedToppings: Map<String, ToppingSelection> = emptyMap(),
+    val toppings: List<Product> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
     val basePrice: Double
         get() = product?.price ?: 0.0
     
-    val toppingsPrice: Double
-        get() = selectedToppings.values.sumOf { it.totalPrice }
-    
-    val totalPrice: Double
-        get() = (basePrice + toppingsPrice) * quantity
+//    val toppingsPrice: Double
+//        get() = selectedToppings.values.sumOf { it.totalPrice }
+//
+//    val totalPrice: Double
+//        get() = (basePrice + toppingsPrice) * quantity
 }
 
 class ProductDetailViewModel(
@@ -72,12 +70,12 @@ class ProductDetailViewModel(
     private fun loadToppings() {
         viewModelScope.launch {
             try {
-                println("LazyPizza: Loading toppings from Firebase...")
-                val toppings = productRepository.getToppings()
-                println("LazyPizza: Loaded ${toppings.size} toppings")
-                toppings.forEach { topping ->
-                    println("LazyPizza: Topping - ${topping.name}: $${topping.price}")
-                }
+                val toppings = productRepository.getProductsByCategory(ProductCategory.TOPPINGS)
+                println("toppings ${toppings.size}")
+
+                //toppings.forEach { topping ->
+                  //  println("LazyPizza: Topping - ${topping.name}: $${topping.price}")
+               // }
                 _uiState.update { state ->
                     state.copy(toppings = toppings)
                 }
@@ -88,16 +86,16 @@ class ProductDetailViewModel(
         }
     }
 
-    fun updateToppingQuantity(topping: Topping, quantity: Int) {
-        _uiState.update { state ->
-            val updatedToppings = state.selectedToppings.toMutableMap()
-            if (quantity <= 0) {
-                updatedToppings.remove(topping.name)
-            } else {
-                updatedToppings[topping.name] = ToppingSelection(topping, quantity)
-            }
-            state.copy(selectedToppings = updatedToppings)
-        }
+    fun updateToppingQuantity(topping: Product, quantity: Int) {
+//        _uiState.update { state ->
+//            val updatedToppings = state.selectedToppings.toMutableMap()
+//            if (quantity <= 0) {
+//                updatedToppings.remove(topping.name)
+//            } else {
+//                updatedToppings[topping.name] = ToppingSelection(topping, quantity)
+//            }
+//            state.copy(selectedToppings = updatedToppings)
+//        }
     }
 
     fun increaseQuantity() {

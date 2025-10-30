@@ -121,7 +121,7 @@ fun AppNavigation(
                 composable(BottomNavItem.Menu.route) {
                     HomeScreen(
                         onProductClick = { product ->
-                            navController.navigate("product_detail/${product.name}")
+                            navController.navigate("product_detail/${product.id}")
                         }
                     )
                 }
