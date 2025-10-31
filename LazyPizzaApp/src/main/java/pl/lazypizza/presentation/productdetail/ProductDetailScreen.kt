@@ -438,8 +438,8 @@ private fun ToppingCard(
                         ),
 
                         onClick = {
-                            //count = (count - 1).coerceAtLeast(0)
-                            onQuantityChanged(topping, count - 1)
+                            if (count > 0)
+                                onQuantityChanged(topping, count - 1)
                         },
                     ) {
                         Icon(
@@ -470,6 +470,7 @@ private fun ToppingCard(
                         ),
                         onClick = {
                             //count = (count + 1).coerceAtMost(3)
+                            if(count<3)
                             onQuantityChanged(topping, count + 1)
                         }) {
                         Icon(
