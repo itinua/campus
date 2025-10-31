@@ -28,7 +28,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,6 +38,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -70,7 +70,7 @@ fun ProductDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val toppings = uiState.toppings
-
+    val selectedToppings = uiState.selectedToppings
 
     Scaffold(
         topBar = {
@@ -108,9 +108,9 @@ fun ProductDetailScreen(
                         WIDTH_DP_EXPANDED_LOWER_BOUND
                     )
                 ) {
-                    HorizontalLayout(product, viewModel, toppings)
+                    HorizontalLayout(product, viewModel, toppings, selectedToppings)
                 } else {
-                    VerticalLayout(product, viewModel, toppings)
+                    VerticalLayout(product, viewModel, toppings, selectedToppings)
                 }
             }
 
@@ -120,7 +120,12 @@ fun ProductDetailScreen(
 }
 
 @Composable
-fun HorizontalLayout(product: Product, viewModel: ProductDetailViewModel, toppings: List<Product>) {
+fun HorizontalLayout(
+    product: Product,
+    viewModel: ProductDetailViewModel,
+    toppings: List<Product>,
+    selectedToppings: Map<String, Product>,
+) {
     Row(modifier = Modifier.fillMaxWidth()) {
         LazyColumn(Modifier.weight(1f)) {
             stickyHeader {
@@ -140,7 +145,7 @@ fun HorizontalLayout(product: Product, viewModel: ProductDetailViewModel, toppin
         Column(modifier = Modifier.weight(1f)) {
             LazyColumn {
                 item {
-                    AllToppings(toppings)
+                    AllToppings(toppings, selectedToppings)
                 }
 
             }
@@ -150,7 +155,11 @@ fun HorizontalLayout(product: Product, viewModel: ProductDetailViewModel, toppin
 
 
 @Composable
-fun VerticalLayout(product: Product, viewModel: ProductDetailViewModel, toppings: List<Product>) {
+fun VerticalLayout(
+    product: Product, viewModel: ProductDetailViewModel,
+    toppings: List<Product>,
+    selectedToppings: Map<String, Product>
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -169,7 +178,7 @@ fun VerticalLayout(product: Product, viewModel: ProductDetailViewModel, toppings
             ProductDescription(product)
         }
         item {
-            AllToppings(toppings)
+            AllToppings(toppings, selectedToppings)
 
         }
     }
@@ -235,7 +244,7 @@ private fun ProductImage(product: Product) {
 
 
 @Composable
-fun AllToppings(toppings: List<Product>) {
+fun AllToppings(toppings: List<Product>, selectedToppings: Map<String, Product>) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -249,7 +258,7 @@ fun AllToppings(toppings: List<Product>) {
         if (toppings.isNotEmpty()) {
             ToppingsGrid(
                 toppings = toppings,
-                selectedToppings = emptyMap(),
+                selectedToppings = selectedToppings,
                 onToppingQuantityChanged = { _, _ -> }
             )
         } else {
@@ -313,9 +322,9 @@ private fun ToppingsGrid(
                 rowToppings.forEach { topping ->
                     ToppingCard(
                         topping = topping,
-                        //selection = selectedToppings[topping.name],
-                        onQuantityChanged = { quantity ->
-                            onToppingQuantityChanged(topping, quantity)
+                        selectedToppings = selectedToppings,
+                        onQuantityChanged = { _, _ ->
+                            //onToppingQuantityChanged(topping, quantity)
                         },
                         modifier = Modifier.weight(1f)
                     )
@@ -332,15 +341,22 @@ private fun ToppingsGrid(
 
 fun <T> Boolean.ifElse(first: T, second: T): T = if (this) first else second
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ToppingCard(
     topping: Product,
-    onQuantityChanged: (Int) -> Unit,
+    selectedToppings: Map<String, Product>,
+    onQuantityChanged: (Product, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
 
     var isClicked by remember { mutableStateOf(false) }
+
+    var count by remember { mutableIntStateOf(selectedToppings.size) }
+
+    LaunchedEffect(count) {
+        onQuantityChanged(topping, count)
+    }
+
     Card(
         modifier = modifier
             .aspectRatio(0.85f)
@@ -380,7 +396,7 @@ private fun ToppingCard(
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
-            var count by remember { mutableIntStateOf(0) }
+
 
             if (isClicked || count > 0) {
                 Row(
@@ -441,7 +457,7 @@ private fun ToppingCard(
             } else {
                 // Price
                 Text(
-                    text = "$${String.format("%.2f", topping.price)}",
+                    text = topping.price.displayPrice(),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )

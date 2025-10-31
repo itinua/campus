@@ -14,10 +14,12 @@ import pl.lazypizza.domain.model.ProductCategory
 
 data class ProductDetailUiState(
     val product: Product? = null,
-    val quantity: Int = 1,
     val toppings: List<Product> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+
+    val selectedToppings: Map<String, Product> = emptyMap()
+
 ) {
 
     
@@ -86,35 +88,37 @@ class ProductDetailViewModel(
     }
 
     fun updateToppingQuantity(topping: Product, quantity: Int) {
+        _uiState.update { state ->
+            val updatedToppings = state.selectedToppings.toMutableMap()
+            val key = topping.id
+
+            if (quantity <= 0) {
+                updatedToppings.remove(key)
+            } else {
+                updatedToppings[key] = topping.copy(quantity = quantity)
+            }
+            state.copy(selectedToppings = updatedToppings)
+        }
+    }
+
+//    fun increaseQuantity() {
 //        _uiState.update { state ->
-//            val updatedToppings = state.selectedToppings.toMutableMap()
-//            if (quantity <= 0) {
-//                updatedToppings.remove(topping.name)
-//            } else {
-//                updatedToppings[topping.name] = ToppingSelection(topping, quantity)
-//            }
-//            state.copy(selectedToppings = updatedToppings)
+//            state.copy(quantity = state.quantity + 1)
 //        }
-    }
-
-    fun increaseQuantity() {
-        _uiState.update { state ->
-            state.copy(quantity = state.quantity + 1)
-        }
-    }
-
-    fun decreaseQuantity() {
-        _uiState.update { state ->
-            state.copy(quantity = maxOf(1, state.quantity - 1))
-        }
-    }
+//    }
+//
+//    fun decreaseQuantity() {
+//        _uiState.update { state ->
+//            state.copy(quantity = maxOf(1, state.quantity - 1))
+//        }
+//    }
 
     fun addToCart() {
         val product = _uiState.value.product ?: return
         // For now, add the base product to cart
         // In a real app, you'd create a custom cart item with toppings
-        repeat(_uiState.value.quantity) {
-            cartRepository.addToCart(product)
-        }
+//        repeat(_uiState.value.quantity) {
+//            cartRepository.addToCart(product)
+//        }
     }
 }
