@@ -22,12 +22,11 @@ data class ProductDetailUiState(
 
 ) {
 
-    
-//    val toppingsPrice: Double
-//        get() = selectedToppings.values.sumOf { it.totalPrice }
-//
-//    val totalPrice: Double
-//        get() = (basePrice + toppingsPrice) * quantity
+    val toppingsPrice: Double
+        get() = selectedToppings.values.sumOf { it.price.toDouble() * it.quantity }
+
+    val totalPrice: Double
+        get() = toppingsPrice + (product?.price?.toDouble() ?: 0.0)
 }
 
 class ProductDetailViewModel(
@@ -35,7 +34,7 @@ class ProductDetailViewModel(
     private val productRepository: ProductRepository,
     private val cartRepository: CartRepository
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(ProductDetailUiState())
     val uiState: StateFlow<ProductDetailUiState> = _uiState.asStateFlow()
 
@@ -47,7 +46,7 @@ class ProductDetailViewModel(
     private fun loadProduct() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            
+
             try {
                 val product = productRepository.getProductById(productId)
                 _uiState.update {
@@ -67,7 +66,7 @@ class ProductDetailViewModel(
             }
         }
     }
-    
+
     private fun loadToppings() {
         viewModelScope.launch {
             try {
@@ -75,8 +74,8 @@ class ProductDetailViewModel(
                 println("toppings ${toppings.size}")
 
                 //toppings.forEach { topping ->
-                  //  println("LazyPizza: Topping - ${topping.name}: $${topping.price}")
-               // }
+                //  println("LazyPizza: Topping - ${topping.name}: $${topping.price}")
+                // }
                 _uiState.update { state ->
                     state.copy(toppings = toppings)
                 }
@@ -97,21 +96,10 @@ class ProductDetailViewModel(
             } else {
                 updatedToppings[key] = topping.copy(quantity = quantity)
             }
+            println("updatedToppings $updatedToppings")
             state.copy(selectedToppings = updatedToppings)
         }
     }
-
-//    fun increaseQuantity() {
-//        _uiState.update { state ->
-//            state.copy(quantity = state.quantity + 1)
-//        }
-//    }
-//
-//    fun decreaseQuantity() {
-//        _uiState.update { state ->
-//            state.copy(quantity = maxOf(1, state.quantity - 1))
-//        }
-//    }
 
     fun addToCart() {
         val product = _uiState.value.product ?: return

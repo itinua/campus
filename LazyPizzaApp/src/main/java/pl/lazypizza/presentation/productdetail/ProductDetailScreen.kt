@@ -38,10 +38,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -71,6 +69,7 @@ fun ProductDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val toppings = uiState.toppings
     val selectedToppings = uiState.selectedToppings
+    val totalPrice = uiState.totalPrice.toFloat()
 
     Scaffold(
         topBar = {
@@ -108,9 +107,19 @@ fun ProductDetailScreen(
                         WIDTH_DP_EXPANDED_LOWER_BOUND
                     )
                 ) {
-                    HorizontalLayout(product, viewModel, toppings, selectedToppings)
+                    HorizontalLayout(
+                        product,
+                        toppings,
+                        selectedToppings,
+                        viewModel::updateToppingQuantity, totalPrice
+                    )
                 } else {
-                    VerticalLayout(product, viewModel, toppings, selectedToppings)
+                    VerticalLayout(
+                        product,
+                        toppings,
+                        selectedToppings,
+                        viewModel::updateToppingQuantity, totalPrice
+                    )
                 }
             }
 
@@ -122,17 +131,20 @@ fun ProductDetailScreen(
 @Composable
 fun HorizontalLayout(
     product: Product,
-    viewModel: ProductDetailViewModel,
     toppings: List<Product>,
     selectedToppings: Map<String, Product>,
+    onQuantityChanged: (Product, Int) -> Unit,
+    price: Float,
 ) {
+
     Row(modifier = Modifier.fillMaxWidth()) {
         LazyColumn(Modifier.weight(1f)) {
             stickyHeader {
                 ProductName(product)
                 AddToCart(
-                    viewModel, Modifier.background(MaterialTheme.colorScheme.background),
-                    onAddToCart = { })
+                    Modifier.background(MaterialTheme.colorScheme.background),
+                    onAddToCart = { }, price
+                )
             }
             item {
                 ProductImage(product)
@@ -145,7 +157,7 @@ fun HorizontalLayout(
         Column(modifier = Modifier.weight(1f)) {
             LazyColumn {
                 item {
-                    AllToppings(toppings, selectedToppings)
+                    AllToppings(toppings, selectedToppings, onQuantityChanged)
                 }
 
             }
@@ -156,9 +168,11 @@ fun HorizontalLayout(
 
 @Composable
 fun VerticalLayout(
-    product: Product, viewModel: ProductDetailViewModel,
+    product: Product,
     toppings: List<Product>,
-    selectedToppings: Map<String, Product>
+    selectedToppings: Map<String, Product>,
+    onQuantityChanged: (Product, Int) -> Unit,
+    price: Float
 ) {
     LazyColumn(
         modifier = Modifier
@@ -178,12 +192,12 @@ fun VerticalLayout(
             ProductDescription(product)
         }
         item {
-            AllToppings(toppings, selectedToppings)
+            AllToppings(toppings, selectedToppings, onQuantityChanged)
 
         }
     }
 
-    AddToCart(viewModel, Modifier, onAddToCart = { })
+    AddToCart(Modifier, onAddToCart = { }, price)
 }
 
 
@@ -244,7 +258,11 @@ private fun ProductImage(product: Product) {
 
 
 @Composable
-fun AllToppings(toppings: List<Product>, selectedToppings: Map<String, Product>) {
+fun AllToppings(
+    toppings: List<Product>,
+    selectedToppings: Map<String, Product>,
+    onQuantityChanged: (Product, Int) -> Unit
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -259,7 +277,7 @@ fun AllToppings(toppings: List<Product>, selectedToppings: Map<String, Product>)
             ToppingsGrid(
                 toppings = toppings,
                 selectedToppings = selectedToppings,
-                onToppingQuantityChanged = { _, _ -> }
+                onQuantityChanged = onQuantityChanged
             )
         } else {
             Text(
@@ -273,14 +291,13 @@ fun AllToppings(toppings: List<Product>, selectedToppings: Map<String, Product>)
 }
 
 @Composable
-fun AddToCart(viewModel: ProductDetailViewModel, modifier: Modifier, onAddToCart: () -> Unit) {
+fun AddToCart(modifier: Modifier, onAddToCart: () -> Unit, price: Float) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter
     ) {
         Button(
             onClick = {
-                viewModel.addToCart()
                 onAddToCart()
             },
             modifier = Modifier
@@ -292,11 +309,19 @@ fun AddToCart(viewModel: ProductDetailViewModel, modifier: Modifier, onAddToCart
                 containerColor = Color(0xFFFF6B35)
             )
         ) {
-            Text(
-                text = "Add to Cart",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (price > 0) {
+                Text(
+                    text = "Add to Cart for ${price.displayPrice()}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            } else {
+                Text(
+                    text = "Add to Cart",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
@@ -305,7 +330,7 @@ fun AddToCart(viewModel: ProductDetailViewModel, modifier: Modifier, onAddToCart
 private fun ToppingsGrid(
     toppings: List<Product>,
     selectedToppings: Map<String, Product>,
-    onToppingQuantityChanged: (Product, Int) -> Unit
+    onQuantityChanged: (Product, Int) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -323,9 +348,7 @@ private fun ToppingsGrid(
                     ToppingCard(
                         topping = topping,
                         selectedToppings = selectedToppings,
-                        onQuantityChanged = { _, _ ->
-                            //onToppingQuantityChanged(topping, quantity)
-                        },
+                        onQuantityChanged = onQuantityChanged,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -351,10 +374,11 @@ private fun ToppingCard(
 
     var isClicked by remember { mutableStateOf(false) }
 
-    var count by remember { mutableIntStateOf(selectedToppings.size) }
+    var count = selectedToppings[topping.id]?.quantity ?: 0
 
-    LaunchedEffect(count) {
-        onQuantityChanged(topping, count)
+    println("updatedToppings ${topping.id} $count")
+    if (count > 0) {
+        isClicked = true
     }
 
     Card(
@@ -414,7 +438,8 @@ private fun ToppingCard(
                         ),
 
                         onClick = {
-                            count = (count - 1).coerceAtLeast(0)
+                            //count = (count - 1).coerceAtLeast(0)
+                            onQuantityChanged(topping, count - 1)
                         },
                     ) {
                         Icon(
@@ -444,7 +469,8 @@ private fun ToppingCard(
                             Color.Gray.copy(alpha = (count < 3).ifElse(0.7f, 0.2f))
                         ),
                         onClick = {
-                            count = (count + 1).coerceAtMost(3)
+                            //count = (count + 1).coerceAtMost(3)
+                            onQuantityChanged(topping, count + 1)
                         }) {
                         Icon(
                             imageVector = Icons.Default.Add,
