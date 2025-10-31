@@ -7,18 +7,18 @@ data class CartItem(
     val product: Product,
     val quantity: Int = 1
 ) {
-    val totalPrice: Double
+    val totalPrice: Float
         get() = product.price * quantity
 }
 
 @Serializable
 data class Cart(
     val items: List<CartItem> = emptyList(),
-    val subtotal: Double = 0.0,
-    val tax: Double = 0.0,
-    val deliveryFee: Double = 0.0
+    val subtotal: Float = 0f,
+    val tax: Float = 0f,
+    val deliveryFee: Float = 0f
 ) {
-    val total: Double
+    val total: Float
         get() = subtotal + tax + deliveryFee
     
     val itemCount: Int

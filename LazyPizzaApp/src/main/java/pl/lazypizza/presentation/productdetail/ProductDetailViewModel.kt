@@ -19,8 +19,7 @@ data class ProductDetailUiState(
     val isLoading: Boolean = false,
     val error: String? = null
 ) {
-    val basePrice: Double
-        get() = product?.price ?: 0.0
+
     
 //    val toppingsPrice: Double
 //        get() = selectedToppings.values.sumOf { it.totalPrice }

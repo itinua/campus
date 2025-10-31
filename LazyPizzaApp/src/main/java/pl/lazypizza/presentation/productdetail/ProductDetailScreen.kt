@@ -1,6 +1,9 @@
 package pl.lazypizza.presentation.productdetail
 
+import android.annotation.SuppressLint
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,19 +26,25 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -181,15 +190,29 @@ private fun ProductDescription(product: Product) {
 
 @Composable
 private fun ProductName(product: Product) {
-    Text(
-        text = product.name,
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background),
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Bold
-    )
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Text(
+            text = product.name,
+            modifier = Modifier
+                .weight(1f),
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = product.price.displayPrice(),
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
 }
+
+@SuppressLint("DefaultLocale")
+fun Float.displayPrice() = "$${String.format("%.2f", this)}"
 
 @Composable
 private fun ProductImage(product: Product) {
@@ -306,30 +329,32 @@ private fun ToppingsGrid(
     }
 }
 
+
+fun <T> Boolean.ifElse(first: T, second: T): T = if (this) first else second
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ToppingCard(
     topping: Product,
     onQuantityChanged: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-//    val isSelected = selection != null && selection.quantity > 0
-//    val currentQuantity = selection?.quantity ?: 0
 
+    var isClicked by remember { mutableStateOf(false) }
     Card(
         modifier = modifier
-            .aspectRatio(0.85f),
+            .aspectRatio(0.85f)
+            .clickable(onClick = { isClicked = !isClicked }),
         shape = RoundedCornerShape(12.dp),
-        //colors = CardDefaults.cardColors(
-        //ontainerColor = if (isSelected) Color(0xFFFFE8E0) else Color.White
-        //   ),
-        //border = if (isSelected)
-        //  BorderStroke(2.dp, Color(0xFFFF6B35))
-        //else
-        //     BorderStroke(1.dp, Color.LightGray),
-        //elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        border = if (isClicked) BorderStroke(1.dp, Color.Red.copy(alpha = 0.5f)) else
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors().copy(
+
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     )
     {
-        val currentQuantity = 0
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -355,65 +380,73 @@ private fun ToppingCard(
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
+            var count by remember { mutableIntStateOf(0) }
 
-            // Price
-            Text(
-                text = "$${String.format("%.2f", topping.price)}",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            // Quantity Selector
-            if (currentQuantity > 0) {
+            if (isClicked || count > 0) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { onQuantityChanged(currentQuantity - 1) },
-                        modifier = Modifier.size(24.dp)
+
+
+                    OutlinedIconButton(
+                        modifier = Modifier.size(30.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(
+                            0.5.dp,
+                            Color.Gray.copy(alpha = (count > 0).ifElse(0.7f, 0.2f))
+                        ),
+
+                        onClick = {
+                            count = (count - 1).coerceAtLeast(0)
+                        },
                     ) {
                         Icon(
                             imageVector = Icons.Default.Remove,
-                            contentDescription = "Decrease",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFFFF6B35)
+                            tint = Color.Gray.copy(
+                                alpha =
+                                    (count > 0).ifElse(0.7f, 0.2f)
+                            ),
+                            contentDescription = "-"
                         )
                     }
 
+
                     Text(
-                        text = currentQuantity.toString(),
-                        fontSize = 14.sp,
+                        modifier = Modifier.weight(1f),
+                        text = "$count",
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
 
-                    IconButton(
-                        onClick = { onQuantityChanged(currentQuantity + 1) },
-                        modifier = Modifier.size(24.dp)
-                    ) {
+                    OutlinedIconButton(
+                        modifier = Modifier.size(30.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(
+                            0.5.dp,
+                            Color.Gray.copy(alpha = (count < 3).ifElse(0.7f, 0.2f))
+                        ),
+                        onClick = {
+                            count = (count + 1).coerceAtMost(3)
+                        }) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Increase",
-                            modifier = Modifier.size(16.dp),
-                            tint = Color(0xFFFF6B35)
+                            tint = Color.Gray.copy(alpha = (count < 3).ifElse(0.7f, 0.2f)),
+                            contentDescription = "-"
                         )
                     }
+
                 }
             } else {
-                TextButton(
-                    onClick = { onQuantityChanged(1) },
-                    modifier = Modifier.height(32.dp),
-                    contentPadding = PaddingValues(horizontal = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color(0xFFFF6B35)
-                    )
-                }
+                // Price
+                Text(
+                    text = "$${String.format("%.2f", topping.price)}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
+
         }
     }
 }

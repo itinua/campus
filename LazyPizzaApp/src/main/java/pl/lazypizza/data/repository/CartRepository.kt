@@ -32,7 +32,7 @@ class InMemoryCartRepository : CartRepository {
             } else {
                 currentCart.items + CartItem(product = product, quantity = 1)
             }
-            
+
             calculateCart(updatedItems)
         }
     }
@@ -64,15 +64,16 @@ class InMemoryCartRepository : CartRepository {
     }
 
     private fun calculateCart(items: List<CartItem>): Cart {
-        val subtotal = items.sumOf { it.totalPrice }
+
+        val subtotal = items.sumOf { it.totalPrice.toDouble() }
         val tax = subtotal * TAX_RATE
         val deliveryFee = if (subtotal > FREE_DELIVERY_THRESHOLD) 0.0 else DELIVERY_FEE
-        
+
         return Cart(
             items = items,
-            subtotal = subtotal,
-            tax = tax,
-            deliveryFee = deliveryFee
+            subtotal = subtotal.toFloat(),
+            tax = tax.toFloat(),
+            deliveryFee = deliveryFee.toFloat()
         )
     }
 

@@ -316,9 +316,9 @@ private fun CheckoutSection(
                     color = Color.Gray
                 )
                 Text(
-                    text = if (cart.deliveryFee == 0.0) "Free" else "$${String.format("%.2f", cart.deliveryFee)}",
+                    text = if (cart.deliveryFee == 0f) "Free" else "$${String.format("%.2f", cart.deliveryFee)}",
                     fontSize = 14.sp,
-                    color = if (cart.deliveryFee == 0.0) Color(0xFF4CAF50) else Color.Gray
+                    color = if (cart.deliveryFee == 0f) Color(0xFF4CAF50) else Color.Gray
                 )
             }
             
